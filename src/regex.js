@@ -53,7 +53,7 @@ export function makeRegexForOpcode(opcodeObj) {
     parts.push(regexPart);
   }
 
-  let regexStr = 
+  let regexStr =
     "^\\s*" +
     parts.reduce((str, next, index) => {
       if (index === parts.length - 1)

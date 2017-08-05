@@ -49,11 +49,11 @@ function _print(inst, opts) {
     case "I":
       [rs, rt, imm] = _extractIFormat(inst);
       break;
-      
+
     case "J":
       [imm] = _extractJFormat(inst);
       break;
-      
+
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
@@ -91,7 +91,7 @@ function _print(inst, opts) {
       case "sa":
         result += " " + _formatNumber(sa, opts);
         break;
-      
+
       case "imm":
         if (isReg(display[i + 1])) {
           result += " " + _formatNumber(imm, opts)
@@ -103,7 +103,7 @@ function _print(inst, opts) {
         else {
           result += " " + _formatNumber(imm, opts);
         }
-        
+
         break;
     }
 
@@ -173,7 +173,7 @@ function _applyCasing(value, casing) {
   switch (casing) {
     case "toLowerCase":
       return value.toLowerCase();
-    
+
     case "toUpperCase":
     default:
       return value.toUpperCase();

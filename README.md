@@ -3,6 +3,8 @@ mips-inst
 
 Convert between text and hex representation of MIPS instructions.
 
+Supports the MIPS IV instruction set.
+
 Usage
 =====
 
@@ -58,3 +60,8 @@ To run tests:
 ```
 npm test
 ```
+
+License
+=======
+
+MIT
