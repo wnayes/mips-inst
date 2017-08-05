@@ -42,7 +42,7 @@ print(0x27BDFFE0, {
   casing: "toLowerCase",
   numBase: 10
 });
-// "addiu $sp $sp -24"
+// "addiu $sp, $sp, -24"
 ```
 
 The bundled UMD module exports a `MIPSInst` global.
