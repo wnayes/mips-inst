@@ -1,0 +1,49 @@
+body {
+    text-align: center;
+    font-family: 'Inconsolata', monospace;
+}
+
+#container {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    position: relative;
+}
+
+.fieldLabel {
+    font-size: 14pt;
+}
+
+#container input {
+    font-size: 20pt;
+}
+
+.error {
+    font-size: 12pt;
+    color: red;
+}
+
+.asmBits {
+    font-size: 8pt;
+    color: #555555;
+}
+
+@keyframes spinner {
+  to {transform: rotate(360deg);}
+}
+
+#container:empty:before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  border-top-color: #333;
+  animation: spinner .6s linear infinite;
+}

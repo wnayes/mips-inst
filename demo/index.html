@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>mips-inst</title>
+        <meta charset="UTF-8">
+
+        <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="demo.css">
+    </head>
+    <body>
+        <h1>mips-inst</h1>
+
+        <p>Convert between text and hex representation of MIPS instructions.</p>
+
+        <div id="container"></div>
+
+        <br />
+
+        <a href="https://github.com/wnayes/mips-inst">https://github.com/wnayes/mips-inst</a>
+
+        <script src="https://unpkg.com/react@15/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+        <script src="../dist/bundle.js"></script>
+
+        <script type="text/babel">
+          function padZero(value, minLen) {
+            while (value.length < minLen) {
+                value = "0" + value;
+            }
+            return value;
+          }
+
+          class MIPSField extends React.Component {
+            render() {
+                return (
+                    <input type="text" value={this.props.value}
+                        id={this.props.id}
+                        onChange={this.props.onChange}
+                        onBlur={this.props.onBlur}
+                        onKeyUp={this.props.onKeyUp}>
+                    </input>
+                );
+            }
+          }
+
+          class MIPSDemoComponent extends React.Component {
+            constructor(props) {
+                super(props);
+
+                this.state = {
+                    inst: "",
+                    asm: "",
+                    err: "",
+                };
+            }
+
+            render() {
+                let err;
+                if (this.state.err) {
+                    err = (
+                        <span className="error">{this.state.err}</span>
+                    );
+                }
+
+                // const asm16 = this.state.asm ? padZero(this.state.asm.toString(16).toUpperCase(), 8) : "";
+                const asm2 = this.state.asm ? padZero(parseInt(this.state.asm, 16).toString(2), 32) : "";
+
+                return (
+                    <div>
+                        <label className="fieldLabel" htmlFor="instField">Instruction</label>
+                        <br />
+                        <MIPSField value={this.state.inst} onChange={this.onInstructionTyping}
+                            id="instField"
+                            onBlur={this.onInstructionChanged}
+                            onKeyUp={(e) => { if (e.key === "Enter") this.onInstructionChanged(); } } />
+                        <br />
+                        <br />
+                        <label className="fieldLabel" htmlFor="asmField">ASM</label>
+                        <br />
+                        <MIPSField value={this.state.asm} onChange={this.onASMTyping}
+                            id="asmField"
+                            onBlur={this.onASMChanged}
+                            onKeyUp={(e) => { if (e.key === "Enter") this.onASMChanged(); } } />
+                        <br />
+                        <span className="asmBits">{asm2}</span>
+                        <br />
+                        <br />
+                        {err}
+                    </div>
+                );
+            }
+
+            onInstructionChanged = (event) => {
+                if (!this.state.dirty)
+                    return;
+
+                if (!this.state.inst) {
+                    this.setState({
+                        inst: "",
+                        asm: "",
+                        err: "",
+                        dirty: false,
+                    });
+                    return;
+                }
+
+                let result;
+                try {
+                    result = MIPSInst.parse(this.state.inst);
+                }
+                catch (e) {
+                    this.setState({
+                        err: e.toString(),
+                        asm: "",
+                        dirty: false,
+                    });
+                    return;
+                }
+
+                this.setState({
+                    asm: padZero(result.toString(16).toUpperCase(), 8),
+                    err: "",
+                    dirty: false,
+                });
+            }
+
+            onInstructionTyping = (event) => {
+                this.setState({
+                    inst: event.target.value,
+                    err: "",
+                    dirty: true,
+                });
+            }
+
+            onASMChanged = (event) => {
+                if (!this.state.dirty)
+                    return;
+
+                if (!this.state.asm) {
+                    this.setState({
+                        inst: "",
+                        asm: "",
+                        err: "",
+                        dirty: false,
+                    });
+                    return;
+                }
+
+                const num = parseInt(this.state.asm, 16);
+
+                let result = "";
+                try {
+                    result = MIPSInst.print(num);
+                }
+                catch (e) {
+                    this.setState({
+                        err: e.toString(),
+                        inst: "",
+                        asm: "",
+                        dirty: false,
+                    });
+                    return;
+                }
+
+                this.setState({
+                    inst: result,
+                    asm: padZero(num.toString(16).toUpperCase(), 8),
+                    err: "",
+                    dirty: false,
+                });
+            }
+
+            onASMTyping = (event) => {
+                this.setState({
+                    asm: event.target.value,
+                    err: "",
+                    dirty: true,
+                });
+            }
+          }
+
+          ReactDOM.render(<MIPSDemoComponent />, document.getElementById("container"));
+        </script>
+    </body>
+</html>

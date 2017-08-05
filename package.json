@@ -1,0 +1,22 @@
+{
+  "name": "mips-inst",
+  "version": "1.0.0",
+  "description": "Convert between text and hex representation of MIPS instructions.",
+  "main": ".src/index.js",
+  "types": "mips-inst.d.ts",
+  "scripts": {
+    "build": "webpack",
+    "test": "mocha"
+  },
+  "keywords": [],
+  "author": "Will Nayes",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wnayes/mips-inst.git"
+  },
+  "devDependencies": {
+    "mocha": "^3.4.2",
+    "webpack": "^3.1.0"
+  }
+}
