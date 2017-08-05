@@ -22,6 +22,10 @@ describe("parse", () => {
       assert.equal(parse("J 0x0001F122"), 0x08007C48);
       assert.equal(parse("J 0x0001F123"), 0x08007C48);
     });
+
+    it("handles default registers being present", () => {
+      assert.equal(parse("JALR RA V0"), 0x0040F809);
+    });
   });
 
   describe("input types", () => {

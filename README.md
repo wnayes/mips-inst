@@ -32,7 +32,7 @@ print([0x27BDFFE0,
   0x8FBF0018,
   0x03E00008
 ]);
-// ["ADDIU SP SP 0xFFE0", "SW RA 0x18(SP)", "LW RA 0x18(SP)", "JR RA"]
+// ["ADDIU SP SP -0x20", "SW RA 0x18(SP)", "LW RA 0x18(SP)", "JR RA"]
 
 print(0x27BDFFE0, {
   commas: true,

@@ -17,6 +17,20 @@ describe("print", () => {
       });
     });
   });
+
+  describe("input types", () => {
+    it("array yields array", () => {
+      assert.deepEqual(print([
+        0x8FBF008C,
+        0x8FBE0088,
+        0x8FB70084,
+      ]), [
+        "LW RA 0x8C(SP)",
+        "LW FP 0x88(SP)",
+        "LW S7 0x84(SP)",
+      ]);
+    });
+  });
 });
 
 function padZero(value, minLen) {
