@@ -13,7 +13,7 @@ export function getOpcode(str) {
   return null;
 }
 
-import { op, rs, rt, rd, sa, imm, f } from "./opcodes.js";
+import { rs, rt, rd, sa, imm } from "./opcodes.js";
 
 export function makeRegexForOpcode(opcodeObj) {
   const display = opcodeObj.display;

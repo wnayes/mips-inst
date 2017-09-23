@@ -1,3 +1,5 @@
+/*global describe, it */
+
 const assert = require("assert");
 
 const parse = require("../dist/bundle.js").parse;

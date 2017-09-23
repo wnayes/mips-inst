@@ -9,12 +9,7 @@ import { makeInt16 } from "./immediates";
 //   casing: "toUpperCase" (default), "toLowerCase"
 //   numBase: 16 (hex, default), 10 (decimal)
 export function print(inst, opts) {
-  opts = Object.assign({
-    commas: false,
-    include$: false,
-    casing: "toUpperCase",
-    numBase: 16
-  }, opts);
+  opts = _getFinalOpts(opts);
 
   if (Array.isArray(inst))
     return inst.map((i) => _print(i, opts));
@@ -23,7 +18,16 @@ export function print(inst, opts) {
     return _print(inst, opts);
 
   throw new Error("Unexpected input to parse. Pass a number or array of numbers.");
-};
+}
+
+function _getFinalOpts(givenOpts) {
+  return Object.assign({
+    commas: false,
+    include$: false,
+    casing: "toUpperCase",
+    numBase: 16
+  }, givenOpts);
+}
 
 function _print(inst, opts) {
   if (typeof inst !== "number")
@@ -38,29 +42,11 @@ function _print(inst, opts) {
     throw new Error("Unrecognized instruction");
 
   const opcodeObj = getOpcodeDetails(opName);
-
-  let rs, rt, rd, sa, imm;
   const opcodeFormat = opcodeObj.format;
-  switch (opcodeFormat) {
-    case "R":
-      [rs, rt, rd, sa] = _extractRFormat(inst);
-      break;
 
-    case "I":
-      [rs, rt, imm] = _extractIFormat(inst);
-      break;
+  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeFormat);
 
-    case "J":
-      [imm] = _extractJFormat(inst);
-      break;
-
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
-  }
-
-  let result = "";
-
-  result += _formatOpcode(opName, opts);
+  let result = _formatOpcode(opName, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
@@ -115,6 +101,28 @@ function _print(inst, opts) {
   return result.trim();
 }
 
+function _extractValues(inst, opcodeFormat) {
+  let rs, rt, rd, sa, imm;
+  switch (opcodeFormat) {
+    case "R":
+      [rs, rt, rd, sa] = _extractRFormat(inst);
+      break;
+
+    case "I":
+      [rs, rt, imm] = _extractIFormat(inst);
+      break;
+
+    case "J":
+      [imm] = _extractJFormat(inst);
+      break;
+
+    default:
+      throw `Unrecognized opcode format ${opcodeFormat}`;
+  }
+
+  return [rs, rt, rd, sa, imm];
+}
+
 function _extractRFormat(inst) {
   return [
     (inst >>> 21) & 0x1F, // rs
@@ -147,11 +155,11 @@ function _formatNumber(num, opts) {
     value += "-";
 
   if (opts.numBase === 16)
-    value += "0x"
+    value += "0x";
   else if (opts.numBase === 8)
-    value += "0o"
+    value += "0o";
   else if (opts.numBase === 2)
-    value += "0b"
+    value += "0b";
 
   value += _applyCasing(Math.abs(num).toString(opts.numBase), opts.casing);
   return value;

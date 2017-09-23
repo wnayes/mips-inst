@@ -167,35 +167,35 @@ const opcodeDetails = {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001001 
+      [op]: 0b001001
     },
   },
   addu: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100001 
+      [f]: 0b100001
     },
   },
   and: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100100 
+      [f]: 0b100100
     },
   },
   andi: {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001100 
+      [op]: 0b001100
     },
   },
   beq: {
     format: "I",
     display: [rs, rt, imm], // off
     known: {
-      [op]: 0b000100 
+      [op]: 0b000100
     },
   },
   beql: {
@@ -305,21 +305,21 @@ const opcodeDetails = {
     format: "I",
     display: [rs, rt, imm], // off
     known: {
-      [op]: 0b000101 
+      [op]: 0b000101
     },
   },
   bnel: {
     format: "I",
     display: [rs, rt, imm], // off
     known: {
-      [op]: 0b010101 
+      [op]: 0b010101
     },
   },
   // break: {
   //   format: "BREAK",
   //   display: [],
   //   known: {
-  //     break: 0b001101 
+  //     break: 0b001101
   //   },
   // },
   // cop0: {
@@ -333,7 +333,7 @@ const opcodeDetails = {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b101100 
+      [f]: 0b101100
     },
   },
   daddi: {
@@ -492,14 +492,14 @@ const opcodeDetails = {
     format: "J",
     display: [imm],
     known: {
-      [op]: 0b000010 
+      [op]: 0b000010
     },
   },
   jal: {
     format: "J",
     display: [imm],
     known: {
-      [op]: 0b000011 
+      [op]: 0b000011
     },
   },
   jalr: {
@@ -508,7 +508,7 @@ const opcodeDetails = {
     known: {
       [f]: 0b001001,
       rt: 0,
-      rd: 31 // Implied unless specified 
+      rd: 31 // Implied unless specified
     },
   },
   jr: {
@@ -517,28 +517,28 @@ const opcodeDetails = {
     known: {
       [f]: 0b001000,
       rt: 0,
-      rd: 0 
+      rd: 0
     },
   },
   lb: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100000 
+      [op]: 0b100000
     },
   },
   lbu: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100100 
+      [op]: 0b100100
     },
   },
   ld: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b110111 
+      [op]: 0b110111
     },
   },
   // ldc1: {
@@ -552,42 +552,42 @@ const opcodeDetails = {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b011010 
+      [op]: 0b011010
     },
   },
   ldr: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b011011 
+      [op]: 0b011011
     },
   },
   lh: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100001 
+      [op]: 0b100001
     },
   },
   lhu: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100101 
+      [op]: 0b100101
     },
   },
   ll: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b110000 
+      [op]: 0b110000
     },
   },
   lld: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b110100 
+      [op]: 0b110100
     },
   },
   lui: {
@@ -602,7 +602,7 @@ const opcodeDetails = {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100011 
+      [op]: 0b100011
     },
   },
   // lwc1: {
@@ -616,21 +616,21 @@ const opcodeDetails = {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100010 
+      [op]: 0b100010
     },
   },
   lwr: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100110 
+      [op]: 0b100110
     },
   },
   lwu: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b100111 
+      [op]: 0b100111
     },
   },
   mfhi: {
@@ -639,7 +639,7 @@ const opcodeDetails = {
     known: {
       [f]: 0b010000,
       [rs]: 0,
-      [rd]: 0, 
+      [rd]: 0,
     },
   },
   mflo: {
@@ -678,7 +678,7 @@ const opcodeDetails = {
     format: "R",
     display: [rs],
     known: {
-      [f]: 0b010011 
+      [f]: 0b010011
     },
   },
   mult: {
@@ -686,7 +686,7 @@ const opcodeDetails = {
     display: [rs, rt],
     known: {
       [f]: 0b011000,
-      [rd]: 0, 
+      [rd]: 0,
     },
   },
   multu: {
@@ -694,7 +694,7 @@ const opcodeDetails = {
     display: [rs, rt],
     known: {
       [f]: 0b011001,
-      [rd]: 0, 
+      [rd]: 0,
     },
   },
   // nop: {
@@ -707,56 +707,56 @@ const opcodeDetails = {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100111 
+      [f]: 0b100111
     },
   },
   or: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100101 
+      [f]: 0b100101
     },
   },
   ori: {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001101 
+      [op]: 0b001101
     },
   },
   pref: {
     format: "I",
     display: [rt, imm, rs], // hint, offset, base
     known: {
-      [op]: 0b110011 
+      [op]: 0b110011
     },
   },
   sb: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b101000 
+      [op]: 0b101000
     },
   },
   sc: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b111000 
+      [op]: 0b111000
     },
   },
   scd: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b111100 
+      [op]: 0b111100
     },
   },
   sd: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b111111 
+      [op]: 0b111111
     },
   },
   // sdc1: {
@@ -770,112 +770,112 @@ const opcodeDetails = {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b101100 
+      [op]: 0b101100
     },
   },
   sdr: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b101101 
+      [op]: 0b101101
     },
   },
   sh: {
     format: "I",
     display: [rt, imm, rs], // off
     known: {
-      [op]: 0b101001 
+      [op]: 0b101001
     },
   },
   sll: {
     format: "R",
     display: [rd, rt, sa],
     known: {
-      [f]: 0 
+      [f]: 0
     },
   },
   sllv: {
     format: "R",
     display: [rd, rt, rs],
     known: {
-      [f]: 0b000100 
+      [f]: 0b000100
     },
   },
   slt: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b101010 
+      [f]: 0b101010
     },
   },
   slti: {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001010 
+      [op]: 0b001010
     },
   },
   sltiu: {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001011 
+      [op]: 0b001011
     },
   },
   sltu: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b101011 
+      [f]: 0b101011
     },
   },
   sra: {
     format: "R",
     display: [rd, rt, sa],
     known: {
-      [f]: 0b000011 
+      [f]: 0b000011
     },
   },
   srav: {
     format: "R",
     display: [rd, rt, rs],
     known: {
-      [f]: 0b000111 
+      [f]: 0b000111
     },
   },
   srl: {
     format: "R",
     display: [rd, rt, sa],
     known: {
-      [f]: 0b000010 
+      [f]: 0b000010
     },
   },
   srlv: {
     format: "R",
     display: [rd, rt, rs],
     known: {
-      [f]: 0b000110 
+      [f]: 0b000110
     },
   },
   sub: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100010 
+      [f]: 0b100010
     },
   },
   subu: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100011 
+      [f]: 0b100011
     },
   },
   sw: {
     format: "I",
     display: [rt, imm, rs],
     known: {
-      [op]: 0b101011 
+      [op]: 0b101011
     },
   },
   // swc1: {
@@ -889,14 +889,14 @@ const opcodeDetails = {
     format: "I",
     display: [rt, imm, rs],
     known: {
-      [op]: 0b101010 
+      [op]: 0b101010
     },
   },
   swr: {
     format: "I",
     display: [rt, imm, rs],
     known: {
-      [op]: 0b101110 
+      [op]: 0b101110
     },
   },
   sync: {
@@ -921,7 +921,7 @@ const opcodeDetails = {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110100 
+      [f]: 0b110100
     },
   },
   teqi: {
@@ -929,14 +929,14 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01100, 
+      [rt]: 0b01100,
     },
   },
   tge: {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110000, 
+      [f]: 0b110000,
     },
   },
   tgei: {
@@ -944,7 +944,7 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01000, 
+      [rt]: 0b01000,
     },
   },
   tgeiu: {
@@ -952,21 +952,21 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01001, 
+      [rt]: 0b01001,
     },
   },
   tgeu: {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110001, 
+      [f]: 0b110001,
     },
   },
   tlt: {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110010, 
+      [f]: 0b110010,
     },
   },
   tlti: {
@@ -974,7 +974,7 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01010, 
+      [rt]: 0b01010,
     },
   },
   tltiu: {
@@ -982,21 +982,21 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01011, 
+      [rt]: 0b01011,
     },
   },
   tltu: {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110011, 
+      [f]: 0b110011,
     },
   },
   tne: {
     format: "R",
     display: [rs, rt],
     known: {
-      [f]: 0b110110, 
+      [f]: 0b110110,
     },
   },
   tnei: {
@@ -1004,24 +1004,24 @@ const opcodeDetails = {
     display: [rs, imm],
     known: {
       [op]: 0b000001,
-      [rt]: 0b01110, 
+      [rt]: 0b01110,
     },
   },
   xor: {
     format: "R",
     display: [rd, rs, rt],
     known: {
-      [f]: 0b100110 
+      [f]: 0b100110
     },
   },
   xori: {
     format: "I",
     display: [rt, rs, imm],
     known: {
-      [op]: 0b001110 
+      [op]: 0b001110
     },
   }
-}
+};
 
 
 /***/ }),
@@ -1192,7 +1192,7 @@ function makeRegexForOpcode(opcodeObj) {
     parts.push(regexPart);
   }
 
-  let regexStr = 
+  let regexStr =
     "^\\s*" +
     parts.reduce((str, next, index) => {
       if (index === parts.length - 1)
@@ -1274,7 +1274,7 @@ function _parse(value) {
     throw `Could not parse opcode from ${value}`;
 
   // TODO: Generalize
-  const specialCode = parseSpecialOp(opcode, value);
+  const specialCode = parseSpecialOp(opcode);
   if (specialCode !== undefined)
     return specialCode;
 
@@ -1318,7 +1318,7 @@ function _parse(value) {
         break;
 
       case "rd":
-      case "rd?":
+      case "rd?": {
         const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getRegBits */](parsedVal);
         if (tryRd === undefined) {
           if (displayEntry === "rd?")
@@ -1328,9 +1328,9 @@ function _parse(value) {
         }
         rd = tryRd;
         break;
-
+      }
       case "sa":
-      case "imm":
+      case "imm": {
         let value;
         const immPieces = [match[i + 2], match[i + 3], match[i + 4]];
         if (opcodeFormat === "I" || opcodeFormat === "R") {
@@ -1350,7 +1350,7 @@ function _parse(value) {
 
         matchIndex += 2;
         break;
-
+      }
       default:
         throw `Unrecognized opcode display entry ${displayEntry}`;
     }
@@ -1382,7 +1382,7 @@ function _buildIFormat(op, rs, rt, imm) {
   let asm = (op << 26);
   asm |= (rs << 21);
   asm |= (rt << 16);
-  asm |= __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* formatImmediate */](imm, 16)
+  asm |= __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* formatImmediate */](imm, 16);
   return asm >>> 0;
 }
 
@@ -1396,7 +1396,7 @@ function makePseudoAddr(addr) {
   return (addr >>> 2) & 0x0FFFFFFF;
 }
 
-function parseSpecialOp(opcode, value) {
+function parseSpecialOp(opcode) {
   if (opcode.toLowerCase() === "nop")
     return 0;
   if (opcode.toLowerCase() === "break")
@@ -1427,12 +1427,7 @@ function parseSpecialOp(opcode, value) {
 //   casing: "toUpperCase" (default), "toLowerCase"
 //   numBase: 16 (hex, default), 10 (decimal)
 function print(inst, opts) {
-  opts = Object.assign({
-    commas: false,
-    include$: false,
-    casing: "toUpperCase",
-    numBase: 16
-  }, opts);
+  opts = _getFinalOpts(opts);
 
   if (Array.isArray(inst))
     return inst.map((i) => _print(i, opts));
@@ -1441,7 +1436,16 @@ function print(inst, opts) {
     return _print(inst, opts);
 
   throw new Error("Unexpected input to parse. Pass a number or array of numbers.");
-};
+}
+
+function _getFinalOpts(givenOpts) {
+  return Object.assign({
+    commas: false,
+    include$: false,
+    casing: "toUpperCase",
+    numBase: 16
+  }, givenOpts);
+}
 
 function _print(inst, opts) {
   if (typeof inst !== "number")
@@ -1456,29 +1460,11 @@ function _print(inst, opts) {
     throw new Error("Unrecognized instruction");
 
   const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
-
-  let rs, rt, rd, sa, imm;
   const opcodeFormat = opcodeObj.format;
-  switch (opcodeFormat) {
-    case "R":
-      [rs, rt, rd, sa] = _extractRFormat(inst);
-      break;
 
-    case "I":
-      [rs, rt, imm] = _extractIFormat(inst);
-      break;
-      
-    case "J":
-      [imm] = _extractJFormat(inst);
-      break;
-      
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
-  }
+  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeFormat);
 
-  let result = "";
-
-  result += _formatOpcode(opName, opts);
+  let result = _formatOpcode(opName, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
@@ -1509,7 +1495,7 @@ function _print(inst, opts) {
       case "sa":
         result += " " + _formatNumber(sa, opts);
         break;
-      
+
       case "imm":
         if (__WEBPACK_IMPORTED_MODULE_1__regex__["b" /* isReg */](display[i + 1])) {
           result += " " + _formatNumber(imm, opts)
@@ -1521,7 +1507,7 @@ function _print(inst, opts) {
         else {
           result += " " + _formatNumber(imm, opts);
         }
-        
+
         break;
     }
 
@@ -1531,6 +1517,28 @@ function _print(inst, opts) {
   }
 
   return result.trim();
+}
+
+function _extractValues(inst, opcodeFormat) {
+  let rs, rt, rd, sa, imm;
+  switch (opcodeFormat) {
+    case "R":
+      [rs, rt, rd, sa] = _extractRFormat(inst);
+      break;
+
+    case "I":
+      [rs, rt, imm] = _extractIFormat(inst);
+      break;
+
+    case "J":
+      [imm] = _extractJFormat(inst);
+      break;
+
+    default:
+      throw `Unrecognized opcode format ${opcodeFormat}`;
+  }
+
+  return [rs, rt, rd, sa, imm];
 }
 
 function _extractRFormat(inst) {
@@ -1565,11 +1573,11 @@ function _formatNumber(num, opts) {
     value += "-";
 
   if (opts.numBase === 16)
-    value += "0x"
+    value += "0x";
   else if (opts.numBase === 8)
-    value += "0o"
+    value += "0o";
   else if (opts.numBase === 2)
-    value += "0b"
+    value += "0b";
 
   value += _applyCasing(Math.abs(num).toString(opts.numBase), opts.casing);
   return value;
@@ -1591,7 +1599,7 @@ function _applyCasing(value, casing) {
   switch (casing) {
     case "toLowerCase":
       return value.toLowerCase();
-    
+
     case "toUpperCase":
     default:
       return value.toUpperCase();

@@ -925,4 +925,4 @@ const opcodeDetails = {
       [op]: 0b001110
     },
   }
-}
+};

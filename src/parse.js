@@ -24,7 +24,7 @@ function _parse(value) {
     throw `Could not parse opcode from ${value}`;
 
   // TODO: Generalize
-  const specialCode = parseSpecialOp(opcode, value);
+  const specialCode = parseSpecialOp(opcode);
   if (specialCode !== undefined)
     return specialCode;
 
@@ -68,7 +68,7 @@ function _parse(value) {
         break;
 
       case "rd":
-      case "rd?":
+      case "rd?": {
         const tryRd = getRegBits(parsedVal);
         if (tryRd === undefined) {
           if (displayEntry === "rd?")
@@ -78,9 +78,9 @@ function _parse(value) {
         }
         rd = tryRd;
         break;
-
+      }
       case "sa":
-      case "imm":
+      case "imm": {
         let value;
         const immPieces = [match[i + 2], match[i + 3], match[i + 4]];
         if (opcodeFormat === "I" || opcodeFormat === "R") {
@@ -100,7 +100,7 @@ function _parse(value) {
 
         matchIndex += 2;
         break;
-
+      }
       default:
         throw `Unrecognized opcode display entry ${displayEntry}`;
     }
@@ -132,7 +132,7 @@ function _buildIFormat(op, rs, rt, imm) {
   let asm = (op << 26);
   asm |= (rs << 21);
   asm |= (rt << 16);
-  asm |= formatImmediate(imm, 16)
+  asm |= formatImmediate(imm, 16);
   return asm >>> 0;
 }
 
@@ -146,7 +146,7 @@ function makePseudoAddr(addr) {
   return (addr >>> 2) & 0x0FFFFFFF;
 }
 
-function parseSpecialOp(opcode, value) {
+function parseSpecialOp(opcode) {
   if (opcode.toLowerCase() === "nop")
     return 0;
   if (opcode.toLowerCase() === "break")

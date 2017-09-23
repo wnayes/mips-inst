@@ -23,7 +23,18 @@
 
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 
-        <script src="../dist/bundle.js"></script>
+        <!-- Conditionally load the script from CDN or local file. -->
+        <script type="text/javascript">
+            (function() {
+                var libLocation = "https://unpkg.com/mips-inst/dist/bundle.js";
+                if (window.location.protocol === "file:") {
+                    libLocation = "../dist/bundle.js";
+                }
+                var libScript = document.createElement("script");
+                libScript.src = libLocation;
+                document.body.appendChild(libScript);
+            })();
+        </script>
 
         <script type="text/babel">
           function padZero(value, minLen) {
