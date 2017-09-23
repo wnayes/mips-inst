@@ -1,6 +1,6 @@
 import { findMatch, getOpcodeDetails } from "./opcodes";
-import { isReg } from "./regex";
-import { getRegName } from "./regs";
+import { isReg, isFloatReg } from "./regex";
+import { getRegName, getFloatRegName } from "./regs";
 import { makeInt16 } from "./immediates";
 
 // opts:
@@ -56,6 +56,13 @@ function _print(inst, opts) {
       case "rd":
       case "rd?":
         return getRegName(rd);
+
+      case "fs":
+        return getFloatRegName(rs);
+      case "ft":
+        return getFloatRegName(rt);
+      case "fd":
+        return getFloatRegName(rd);
     }
   }
 
@@ -65,6 +72,9 @@ function _print(inst, opts) {
       case "rs":
       case "rt":
       case "rd":
+      case "fs":
+      case "ft":
+      case "fd":
         result += " " + _formatReg(_getRegName(display[i]), opts);
         break;
 

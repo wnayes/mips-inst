@@ -18,9 +18,16 @@ exports.testCases = [
   ["COP1 0xFFFF", 0x4400FFFF],
   ["COP2 0xF1F1F1", 0x48F1F1F1],
   ["COP3 0x3FFFFFF", 0x4FFFFFFF],
+  ["LDC2 S4 0x20(SP)", 0xDBB40020],
   ["BREAK", 0x0000000D],
   ["SYSCALL", 0x0000000C],
   ["NOP", 0x00000000],
+
+  // FPU-related
+  ["LDC1 F20 0x20(SP)", 0xD7B40020],
+  ["SDC1 F20 0x20(SP)", 0xF7B40020],
+  ["LWC1 F2 0x40(S0)", 0xC6020040],
+  ["SWC1 F24 0x8(V0)", 0xE4580008],
 
   // Comma tests
   ["ADDU A0, A2, R0", 0x00C02021, { commas: true }],

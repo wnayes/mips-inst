@@ -2,6 +2,9 @@ export const op = "op";
 export const rs = "rs";
 export const rt = "rt";
 export const rd = "rd";
+export const fs = "fs";
+export const ft = "ft";
+export const fd = "fd";
 export const sa = "sa";
 export const imm = "imm";
 export const f = "f";
@@ -472,13 +475,20 @@ const opcodeDetails = {
       [op]: 0b110111
     },
   },
-  // ldc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     //[op]: 0b1101zz  TODO
-  //   },
-  // },
+  ldc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b110101
+    },
+  },
+  ldc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110110
+    },
+  },
   ldl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -536,13 +546,27 @@ const opcodeDetails = {
       [op]: 0b100011
     },
   },
-  // lwc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     // [op]: 0b1100zz TODO
-  //   },
-  // },
+  lwc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b110001
+    },
+  },
+  lwc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110010
+    },
+  },
+  lwc3: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110011
+    },
+  },
   lwl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -690,13 +714,20 @@ const opcodeDetails = {
       [op]: 0b111111
     },
   },
-  // sdc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     //[op]: 0b1111zz TODO
-  //   },
-  // },
+  sdc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b111101
+    },
+  },
+  sdc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b111110
+    },
+  },
   sdl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -809,13 +840,27 @@ const opcodeDetails = {
       [op]: 0b101011
     },
   },
-  // swc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs],
-  //   known: {
-  //     // [op]: 0b1110zz  TODO
-  //   },
-  // },
+  swc1: {
+    format: "I",
+    display: [ft, imm, rs],
+    known: {
+      [op]: 0b111001
+    },
+  },
+  swc2: {
+    format: "I",
+    display: [rt, imm, rs],
+    known: {
+      [op]: 0b111010
+    },
+  },
+  swc3: {
+    format: "I",
+    display: [rt, imm, rs],
+    known: {
+      [op]: 0b111011
+    },
+  },
   swl: {
     format: "I",
     display: [rt, imm, rs],

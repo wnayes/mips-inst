@@ -40,11 +40,14 @@ function _parse(value) {
 
   const opcodeFormat = opcodeObj.format;
 
-  let op, rs, rt, rd, sa, imm, f;
+  let op, rs, rt, rd, fs, ft, fd, sa, imm, f;
   op = opcodeObj.known["op"] || 0;
   rs = opcodeObj.known["rs"] || 0;
   rt = opcodeObj.known["rt"] || 0;
   rd = opcodeObj.known["rd"] || 0;
+  fs = opcodeObj.known["fs"] || 0;
+  ft = opcodeObj.known["ft"] || 0;
+  fd = opcodeObj.known["fd"] || 0;
   sa = opcodeObj.known["sa"] || 0;
   imm = opcodeObj.known["imm"] || 0;
   f = opcodeObj.known["f"] || 0;
@@ -58,13 +61,13 @@ function _parse(value) {
       case "rs":
         rs = getRegBits(parsedVal);
         if (rs === undefined)
-          throw new Error(`Unrecognized rs register ${rs}`);
+          throw new Error(`Unrecognized rs register ${parsedVal}`);
         break;
 
       case "rt":
         rt = getRegBits(parsedVal);
         if (rt === undefined)
-          throw new Error(`Unrecognized rt register ${rt}`);
+          throw new Error(`Unrecognized rt register ${parsedVal}`);
         break;
 
       case "rd":
@@ -74,11 +77,30 @@ function _parse(value) {
           if (displayEntry === "rd?")
             break;
 
-          throw new Error(`Unrecognized rd register ${tryRd}`);
+          throw new Error(`Unrecognized rd register ${parsedVal}`);
         }
         rd = tryRd;
         break;
       }
+
+      case "fs":
+        fs = parseInt(parsedVal);
+        if (isNaN(fs))
+          throw new Error(`Unrecognized fs register ${parsedVal}`);
+        break;
+
+      case "ft":
+        ft = parseInt(parsedVal);
+        if (isNaN(ft))
+          throw new Error(`Unrecognized ft register ${parsedVal}`);
+        break;
+
+      case "fd":
+        fd = parseInt(parsedVal);
+        if (isNaN(fd))
+          throw new Error(`Unrecognized fd register ${parsedVal}`);
+        break;
+
       case "sa":
       case "imm": {
         let value;
@@ -108,9 +130,9 @@ function _parse(value) {
 
   switch (opcodeFormat) {
     case "R":
-      return _buildRFormat(op, rs, rt, rd, sa, f);
+      return _buildRFormat(op, rs || fs, rt || ft, rd || fd, sa, f);
     case "I":
-      return _buildIFormat(op, rs, rt, imm);
+      return _buildIFormat(op, rs || fs, rt || ft, imm);
     case "J":
       return _buildJFormat(op, imm, opcodeObj.shift);
     default:

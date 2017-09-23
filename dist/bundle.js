@@ -78,25 +78,34 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = getOpcodeDetails;
-/* harmony export (immutable) */ __webpack_exports__["a"] = findMatch;
+/* harmony export (immutable) */ __webpack_exports__["e"] = getOpcodeDetails;
+/* harmony export (immutable) */ __webpack_exports__["b"] = findMatch;
 const op = "op";
 /* unused harmony export op */
 
 const rs = "rs";
-/* harmony export (immutable) */ __webpack_exports__["e"] = rs;
+/* harmony export (immutable) */ __webpack_exports__["h"] = rs;
 
 const rt = "rt";
-/* harmony export (immutable) */ __webpack_exports__["f"] = rt;
+/* harmony export (immutable) */ __webpack_exports__["i"] = rt;
 
 const rd = "rd";
-/* harmony export (immutable) */ __webpack_exports__["d"] = rd;
+/* harmony export (immutable) */ __webpack_exports__["g"] = rd;
+
+const fs = "fs";
+/* harmony export (immutable) */ __webpack_exports__["c"] = fs;
+
+const ft = "ft";
+/* harmony export (immutable) */ __webpack_exports__["d"] = ft;
+
+const fd = "fd";
+/* harmony export (immutable) */ __webpack_exports__["a"] = fd;
 
 const sa = "sa";
-/* harmony export (immutable) */ __webpack_exports__["g"] = sa;
+/* harmony export (immutable) */ __webpack_exports__["j"] = sa;
 
 const imm = "imm";
-/* harmony export (immutable) */ __webpack_exports__["c"] = imm;
+/* harmony export (immutable) */ __webpack_exports__["f"] = imm;
 
 const f = "f";
 /* unused harmony export f */
@@ -568,13 +577,20 @@ const opcodeDetails = {
       [op]: 0b110111
     },
   },
-  // ldc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     //[op]: 0b1101zz  TODO
-  //   },
-  // },
+  ldc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b110101
+    },
+  },
+  ldc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110110
+    },
+  },
   ldl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -632,13 +648,27 @@ const opcodeDetails = {
       [op]: 0b100011
     },
   },
-  // lwc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     // [op]: 0b1100zz TODO
-  //   },
-  // },
+  lwc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b110001
+    },
+  },
+  lwc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110010
+    },
+  },
+  lwc3: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b110011
+    },
+  },
   lwl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -786,13 +816,20 @@ const opcodeDetails = {
       [op]: 0b111111
     },
   },
-  // sdc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs], // off
-  //   known: {
-  //     //[op]: 0b1111zz TODO
-  //   },
-  // },
+  sdc1: {
+    format: "I",
+    display: [ft, imm, rs], // off
+    known: {
+      [op]: 0b111101
+    },
+  },
+  sdc2: {
+    format: "I",
+    display: [rt, imm, rs], // off
+    known: {
+      [op]: 0b111110
+    },
+  },
   sdl: {
     format: "I",
     display: [rt, imm, rs], // off
@@ -905,13 +942,27 @@ const opcodeDetails = {
       [op]: 0b101011
     },
   },
-  // swc1: {
-  //   format: "I",
-  //   display: [rt, imm, rs],
-  //   known: {
-  //     // [op]: 0b1110zz  TODO
-  //   },
-  // },
+  swc1: {
+    format: "I",
+    display: [ft, imm, rs],
+    known: {
+      [op]: 0b111001
+    },
+  },
+  swc2: {
+    format: "I",
+    display: [rt, imm, rs],
+    known: {
+      [op]: 0b111010
+    },
+  },
+  swc3: {
+    format: "I",
+    display: [rt, imm, rs],
+    known: {
+      [op]: 0b111011
+    },
+  },
   swl: {
     format: "I",
     display: [rt, imm, rs],
@@ -1102,8 +1153,9 @@ function makeInt16(value) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = getRegBits;
-/* harmony export (immutable) */ __webpack_exports__["b"] = getRegName;
+/* harmony export (immutable) */ __webpack_exports__["b"] = getRegBits;
+/* harmony export (immutable) */ __webpack_exports__["c"] = getRegName;
+/* harmony export (immutable) */ __webpack_exports__["a"] = getFloatRegName;
 const regs = {
   r0: 0,
   zero: 0,
@@ -1154,6 +1206,12 @@ function getRegName(bits) {
   return "";
 }
 
+function getFloatRegName(bits) {
+  if (typeof bits !== "number")
+    throw new Error("getFloatRegName encountered non-number");
+
+  return "F" + bits;
+}
 
 /***/ }),
 /* 3 */
@@ -1163,11 +1221,13 @@ function getRegName(bits) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = getOpcode;
 /* harmony export (immutable) */ __webpack_exports__["c"] = makeRegexForOpcode;
 /* harmony export (immutable) */ __webpack_exports__["b"] = isReg;
+/* unused harmony export isFloatReg */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes_js__ = __webpack_require__(0);
 const opRegex = "([A-Za-z0-3]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
+const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
@@ -1197,10 +1257,13 @@ function makeRegexForOpcode(opcodeObj) {
     if (isReg(part)) {
       regexPart += regRegex;
     }
-    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["g" /* sa */]) {
+    else if (isFloatReg(part)) {
+      regexPart += floatRegRegex;
+    }
+    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["j" /* sa */]) {
       regexPart += immRegex;
     }
-    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["c" /* imm */]) {
+    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["f" /* imm */]) {
       if (isReg(display[i + 1])) {
         regexPart += regIndRegex;
         i++;
@@ -1241,9 +1304,22 @@ function isReg(entry) {
     return false;
 
   switch (entry.substr(0, 2)) {
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["e" /* rs */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["f" /* rt */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["d" /* rd */]:
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["h" /* rs */]:
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["i" /* rt */]:
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["g" /* rd */]:
+      return true;
+  }
+  return false;
+}
+
+function isFloatReg(entry) {
+  if (!entry)
+    return false;
+
+  switch (entry.substr(0, 2)) {
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["c" /* fs */]:
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["d" /* ft */]:
+    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["a" /* fd */]:
       return true;
   }
   return false;
@@ -1305,7 +1381,7 @@ function _parse(value) {
   if (specialCode !== undefined)
     return specialCode;
 
-  let opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
+  let opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["e" /* getOpcodeDetails */](opcode);
   if (!opcodeObj) {
     throw `Opcode ${opcode} was not recognized`;
   }
@@ -1317,11 +1393,14 @@ function _parse(value) {
 
   const opcodeFormat = opcodeObj.format;
 
-  let op, rs, rt, rd, sa, imm, f;
+  let op, rs, rt, rd, fs, ft, fd, sa, imm, f;
   op = opcodeObj.known["op"] || 0;
   rs = opcodeObj.known["rs"] || 0;
   rt = opcodeObj.known["rt"] || 0;
   rd = opcodeObj.known["rd"] || 0;
+  fs = opcodeObj.known["fs"] || 0;
+  ft = opcodeObj.known["ft"] || 0;
+  fd = opcodeObj.known["fd"] || 0;
   sa = opcodeObj.known["sa"] || 0;
   imm = opcodeObj.known["imm"] || 0;
   f = opcodeObj.known["f"] || 0;
@@ -1333,29 +1412,48 @@ function _parse(value) {
     const displayEntry = display[i];
     switch (displayEntry) {
       case "rs":
-        rs = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getRegBits */](parsedVal);
+        rs = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
         if (rs === undefined)
-          throw new Error(`Unrecognized rs register ${rs}`);
+          throw new Error(`Unrecognized rs register ${parsedVal}`);
         break;
 
       case "rt":
-        rt = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getRegBits */](parsedVal);
+        rt = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
         if (rt === undefined)
-          throw new Error(`Unrecognized rt register ${rt}`);
+          throw new Error(`Unrecognized rt register ${parsedVal}`);
         break;
 
       case "rd":
       case "rd?": {
-        const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getRegBits */](parsedVal);
+        const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
         if (tryRd === undefined) {
           if (displayEntry === "rd?")
             break;
 
-          throw new Error(`Unrecognized rd register ${tryRd}`);
+          throw new Error(`Unrecognized rd register ${parsedVal}`);
         }
         rd = tryRd;
         break;
       }
+
+      case "fs":
+        fs = parseInt(parsedVal);
+        if (isNaN(fs))
+          throw new Error(`Unrecognized fs register ${parsedVal}`);
+        break;
+
+      case "ft":
+        ft = parseInt(parsedVal);
+        if (isNaN(ft))
+          throw new Error(`Unrecognized ft register ${parsedVal}`);
+        break;
+
+      case "fd":
+        fd = parseInt(parsedVal);
+        if (isNaN(fd))
+          throw new Error(`Unrecognized fd register ${parsedVal}`);
+        break;
+
       case "sa":
       case "imm": {
         let value;
@@ -1385,9 +1483,9 @@ function _parse(value) {
 
   switch (opcodeFormat) {
     case "R":
-      return _buildRFormat(op, rs, rt, rd, sa, f);
+      return _buildRFormat(op, rs || fs, rt || ft, rd || fd, sa, f);
     case "I":
-      return _buildIFormat(op, rs, rt, imm);
+      return _buildIFormat(op, rs || fs, rt || ft, imm);
     case "J":
       return _buildJFormat(op, imm, opcodeObj.shift);
     default:
@@ -1478,11 +1576,11 @@ function _print(inst, opts) {
   if (specialStr)
     return specialStr;
 
-  const opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
+  const opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* findMatch */](inst);
   if (!opName)
     throw new Error("Unrecognized instruction");
 
-  const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
+  const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["e" /* getOpcodeDetails */](opName);
 
   let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeObj);
 
@@ -1491,12 +1589,19 @@ function _print(inst, opts) {
   function _getRegName(displayEntry) {
     switch (displayEntry) {
       case "rs":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegName */](rs);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rs);
       case "rt":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegName */](rt);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rt);
       case "rd":
       case "rd?":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegName */](rd);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rd);
+
+      case "fs":
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rs);
+      case "ft":
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rt);
+      case "fd":
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rd);
     }
   }
 
@@ -1506,6 +1611,9 @@ function _print(inst, opts) {
       case "rs":
       case "rt":
       case "rd":
+      case "fs":
+      case "ft":
+      case "fd":
         result += " " + _formatReg(_getRegName(display[i]), opts);
         break;
 

@@ -2,6 +2,7 @@ const opRegex = "([A-Za-z0-3]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
+const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
@@ -13,7 +14,7 @@ export function getOpcode(str) {
   return null;
 }
 
-import { rs, rt, rd, sa, imm } from "./opcodes.js";
+import { rs, rt, rd, fs, ft, fd, sa, imm } from "./opcodes.js";
 
 export function makeRegexForOpcode(opcodeObj) {
   const display = opcodeObj.display;
@@ -30,6 +31,9 @@ export function makeRegexForOpcode(opcodeObj) {
 
     if (isReg(part)) {
       regexPart += regRegex;
+    }
+    else if (isFloatReg(part)) {
+      regexPart += floatRegRegex;
     }
     else if (part === sa) {
       regexPart += immRegex;
@@ -78,6 +82,19 @@ export function isReg(entry) {
     case rs:
     case rt:
     case rd:
+      return true;
+  }
+  return false;
+}
+
+export function isFloatReg(entry) {
+  if (!entry)
+    return false;
+
+  switch (entry.substr(0, 2)) {
+    case fs:
+    case ft:
+    case fd:
       return true;
   }
   return false;

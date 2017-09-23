@@ -47,3 +47,10 @@ export function getRegName(bits) {
   }
   return "";
 }
+
+export function getFloatRegName(bits) {
+  if (typeof bits !== "number")
+    throw new Error("getFloatRegName encountered non-number");
+
+  return "F" + bits;
+}
