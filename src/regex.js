@@ -1,4 +1,4 @@
-const opRegex = "([A-Za-z]+)";
+const opRegex = "([A-Za-z0-3]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";

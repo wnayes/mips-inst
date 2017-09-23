@@ -108,7 +108,7 @@ function getOpcodeDetails(opcode) {
 
 // returns name
 function findMatch(inst) {
-  const op = (inst >>> 26) & 0x2F;
+  const op = inst >>> 26;
 
   for (let opName in opcodeDetails) {
     const opDetails = opcodeDetails[opName];
@@ -330,6 +330,30 @@ const opcodeDetails = {
       [op]: 0b010000
     },
   },
+  cop1: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010001
+    },
+  },
+  cop2: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010010
+    },
+  },
+  cop3: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010011
+    },
+  },
   dadd: {
     format: "R",
     display: [rd, rs, rt],
@@ -491,6 +515,7 @@ const opcodeDetails = {
   },
   j: {
     format: "J",
+    shift: true,
     display: [imm],
     known: {
       [op]: 0b000010
@@ -498,6 +523,7 @@ const opcodeDetails = {
   },
   jal: {
     format: "J",
+    shift: true,
     display: [imm],
     known: {
       [op]: 0b000011
@@ -1138,7 +1164,7 @@ function getRegName(bits) {
 /* harmony export (immutable) */ __webpack_exports__["c"] = makeRegexForOpcode;
 /* harmony export (immutable) */ __webpack_exports__["b"] = isReg;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes_js__ = __webpack_require__(0);
-const opRegex = "([A-Za-z]+)";
+const opRegex = "([A-Za-z0-3]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
@@ -1363,7 +1389,7 @@ function _parse(value) {
     case "I":
       return _buildIFormat(op, rs, rt, imm);
     case "J":
-      return _buildJFormat(op, imm);
+      return _buildJFormat(op, imm, opcodeObj.shift);
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
@@ -1387,14 +1413,10 @@ function _buildIFormat(op, rs, rt, imm) {
   return asm >>> 0;
 }
 
-function _buildJFormat(op, imm) {
+function _buildJFormat(op, imm, shift) {
   let asm = (op << 26);
-  asm |= makePseudoAddr(imm);
+  asm |= (shift ? imm >>> 2 : imm) & 0x03FFFFFF;
   return asm >>> 0;
-}
-
-function makePseudoAddr(addr) {
-  return (addr >>> 2) & 0x0FFFFFFF;
 }
 
 function parseSpecialOp(opcode) {
@@ -1532,7 +1554,7 @@ function _extractValues(inst, opcodeObj) {
       break;
 
     case "J":
-      [imm] = _extractJFormat(inst, opcodeObj.shift !== false);
+      [imm] = _extractJFormat(inst, opcodeObj.shift);
       break;
 
     default:

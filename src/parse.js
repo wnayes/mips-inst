@@ -112,7 +112,7 @@ function _parse(value) {
     case "I":
       return _buildIFormat(op, rs, rt, imm);
     case "J":
-      return _buildJFormat(op, imm);
+      return _buildJFormat(op, imm, opcodeObj.shift);
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
@@ -136,14 +136,10 @@ function _buildIFormat(op, rs, rt, imm) {
   return asm >>> 0;
 }
 
-function _buildJFormat(op, imm) {
+function _buildJFormat(op, imm, shift) {
   let asm = (op << 26);
-  asm |= makePseudoAddr(imm);
+  asm |= (shift ? imm >>> 2 : imm) & 0x03FFFFFF;
   return asm >>> 0;
-}
-
-function makePseudoAddr(addr) {
-  return (addr >>> 2) & 0x0FFFFFFF;
 }
 
 function parseSpecialOp(opcode) {

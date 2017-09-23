@@ -12,7 +12,7 @@ export function getOpcodeDetails(opcode) {
 
 // returns name
 export function findMatch(inst) {
-  const op = (inst >>> 26) & 0x2F;
+  const op = inst >>> 26;
 
   for (let opName in opcodeDetails) {
     const opDetails = opcodeDetails[opName];
@@ -234,6 +234,30 @@ const opcodeDetails = {
       [op]: 0b010000
     },
   },
+  cop1: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010001
+    },
+  },
+  cop2: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010010
+    },
+  },
+  cop3: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010011
+    },
+  },
   dadd: {
     format: "R",
     display: [rd, rs, rt],
@@ -395,6 +419,7 @@ const opcodeDetails = {
   },
   j: {
     format: "J",
+    shift: true,
     display: [imm],
     known: {
       [op]: 0b000010
@@ -402,6 +427,7 @@ const opcodeDetails = {
   },
   jal: {
     format: "J",
+    shift: true,
     display: [imm],
     known: {
       [op]: 0b000011

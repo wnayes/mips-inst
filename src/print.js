@@ -113,7 +113,7 @@ function _extractValues(inst, opcodeObj) {
       break;
 
     case "J":
-      [imm] = _extractJFormat(inst, opcodeObj.shift !== false);
+      [imm] = _extractJFormat(inst, opcodeObj.shift);
       break;
 
     default:
