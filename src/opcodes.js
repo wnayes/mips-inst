@@ -226,13 +226,14 @@ const opcodeDetails = {
   //     break: 0b001101
   //   },
   // },
-  // cop0: {
-  //   format: "COP",
-  //   display: ["cop"],
-  //   known: {
-  //     // [op]: 0b0100zz TODO
-  //   },
-  // },
+  cop0: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010000
+    },
+  },
   dadd: {
     format: "R",
     display: [rd, rs, rt],

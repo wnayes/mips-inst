@@ -322,13 +322,14 @@ const opcodeDetails = {
   //     break: 0b001101
   //   },
   // },
-  // cop0: {
-  //   format: "COP",
-  //   display: ["cop"],
-  //   known: {
-  //     // [op]: 0b0100zz TODO
-  //   },
-  // },
+  cop0: {
+    format: "J",
+    shift: false,
+    display: [imm], // cop_fun
+    known: {
+      [op]: 0b010000
+    },
+  },
   dadd: {
     format: "R",
     display: [rd, rs, rt],
@@ -1460,9 +1461,8 @@ function _print(inst, opts) {
     throw new Error("Unrecognized instruction");
 
   const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
-  const opcodeFormat = opcodeObj.format;
 
-  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeFormat);
+  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeObj);
 
   let result = _formatOpcode(opName, opts);
 
@@ -1519,8 +1519,9 @@ function _print(inst, opts) {
   return result.trim();
 }
 
-function _extractValues(inst, opcodeFormat) {
+function _extractValues(inst, opcodeObj) {
   let rs, rt, rd, sa, imm;
+  const opcodeFormat = opcodeObj.format;
   switch (opcodeFormat) {
     case "R":
       [rs, rt, rd, sa] = _extractRFormat(inst);
@@ -1531,7 +1532,7 @@ function _extractValues(inst, opcodeFormat) {
       break;
 
     case "J":
-      [imm] = _extractJFormat(inst);
+      [imm] = _extractJFormat(inst, opcodeObj.shift !== false);
       break;
 
     default:
@@ -1558,9 +1559,9 @@ function _extractIFormat(inst) {
   ];
 }
 
-function _extractJFormat(inst) {
+function _extractJFormat(inst, shift) {
   return [
-    (inst & 0xFFFF) << 2
+    (inst & 0x03FFFFFF) << (shift ? 2 : 0)
   ];
 }
 

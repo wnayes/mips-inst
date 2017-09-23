@@ -12,6 +12,8 @@ exports.testCases = [
   ["JR RA", 0x03E00008],
   ["JALR V0", 0x0040F809],
   ["JALR SP V0", 0x0040E809],
+  ["J 0xFFFFFFC", 0x0BFFFFFF],
+  ["JAL 0xFFFFFFC", 0x0FFFFFFF],
   ["BREAK", 0x0000000D],
   ["SYSCALL", 0x0000000C],
   ["NOP", 0x00000000],
