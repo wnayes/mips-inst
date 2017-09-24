@@ -1,4 +1,4 @@
-const opRegex = "([A-Za-z0-3]+)";
+const opRegex = "([A-Za-z0-3.]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
@@ -6,10 +6,18 @@ const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
+// Gets the op string from a given entire instruction.
+// This is a general form (.fmt rather than .S, .D, etc.)
 export function getOpcode(str) {
   const match = opcodeRegex.exec(str);
   if (match) {
-    return match[1];
+    const pieces = match[1].split("."); // Could be .cond.fmt
+    if (pieces.length === 1)
+      return pieces[0];
+    if (pieces.length === 2)
+      return pieces[0] + ".fmt";
+    if (pieces.length === 3)
+      return pieces[0] + ".cond.fmt";
   }
   return null;
 }

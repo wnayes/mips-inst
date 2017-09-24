@@ -139,6 +139,13 @@ function findMatch(inst) {
         if (knownRt !== undefined && knownRt !== rt)
           continue;
       }
+      else if (opDetails.format === "FR") {
+        const f = inst & 0x2F;
+
+        // Function must also match
+        if ((opDetails.known["f"] || 0) !== f)
+          continue;
+      }
       else if (opDetails.format === "I") {
         const rs = (inst >>> 21) & 0x1F;
         const rt = (inst >>> 16) & 0x1F;
@@ -163,6 +170,14 @@ const opcodeDetails = {
     display: [rd, rs, rt],
     known: {
       [f]: 0b100000
+    }
+  },
+  "add.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs, ft],
+    known: {
+      [op]: 0b010001
     }
   },
   addi: {
@@ -1153,9 +1168,11 @@ function makeInt16(value) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["b"] = getRegBits;
-/* harmony export (immutable) */ __webpack_exports__["c"] = getRegName;
+/* harmony export (immutable) */ __webpack_exports__["d"] = getRegBits;
+/* harmony export (immutable) */ __webpack_exports__["e"] = getRegName;
 /* harmony export (immutable) */ __webpack_exports__["a"] = getFloatRegName;
+/* harmony export (immutable) */ __webpack_exports__["b"] = getFmtBits;
+/* harmony export (immutable) */ __webpack_exports__["c"] = getFmtName;
 const regs = {
   r0: 0,
   zero: 0,
@@ -1213,17 +1230,37 @@ function getFloatRegName(bits) {
   return "F" + bits;
 }
 
+const fmts = {
+  S: 16,
+  D: 17,
+  W: 20,
+  L: 21,
+};
+
+function getFmtBits(fmtStr) {
+  return fmts[fmtStr.toUpperCase()];
+}
+
+function getFmtName(bits) {
+  for (let name in fmts) {
+    if (fmts[name] === bits)
+      return name;
+  }
+  return "";
+}
+
+
 /***/ }),
 /* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = getOpcode;
-/* harmony export (immutable) */ __webpack_exports__["c"] = makeRegexForOpcode;
-/* harmony export (immutable) */ __webpack_exports__["b"] = isReg;
-/* unused harmony export isFloatReg */
+/* harmony export (immutable) */ __webpack_exports__["d"] = makeRegexForOpcode;
+/* harmony export (immutable) */ __webpack_exports__["c"] = isReg;
+/* harmony export (immutable) */ __webpack_exports__["b"] = isFloatReg;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes_js__ = __webpack_require__(0);
-const opRegex = "([A-Za-z0-3]+)";
+const opRegex = "([A-Za-z0-3.]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
 const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
@@ -1231,10 +1268,18 @@ const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
+// Gets the op string from a given entire instruction.
+// This is a general form (.fmt rather than .S, .D, etc.)
 function getOpcode(str) {
   const match = opcodeRegex.exec(str);
   if (match) {
-    return match[1];
+    const pieces = match[1].split("."); // Could be .cond.fmt
+    if (pieces.length === 1)
+      return pieces[0];
+    if (pieces.length === 2)
+      return pieces[0] + ".fmt";
+    if (pieces.length === 3)
+      return pieces[0] + ".cond.fmt";
   }
   return null;
 }
@@ -1386,14 +1431,14 @@ function _parse(value) {
     throw `Opcode ${opcode} was not recognized`;
   }
 
-  let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["c" /* makeRegexForOpcode */](opcodeObj);
+  let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["d" /* makeRegexForOpcode */](opcodeObj);
   let match = regex.exec(value);
   if (!match)
     throw `Could not parse instruction: ${value}`;
 
   const opcodeFormat = opcodeObj.format;
 
-  let op, rs, rt, rd, fs, ft, fd, sa, imm, f;
+  let op, rs, rt, rd, fs, ft, fd, sa, fmt, imm, f;
   op = opcodeObj.known["op"] || 0;
   rs = opcodeObj.known["rs"] || 0;
   rt = opcodeObj.known["rt"] || 0;
@@ -1405,27 +1450,34 @@ function _parse(value) {
   imm = opcodeObj.known["imm"] || 0;
   f = opcodeObj.known["f"] || 0;
 
+  if (opcodeFormat === "FR") {
+    if (opcodeObj.known.hasOwnProperty("fmt"))
+      fmt = opcodeObj.known["fmt"];
+    else
+      fmt = determineFmt(match[1], opcodeObj.formats);
+  }
+
   const display = opcodeObj.display;
-  let matchIndex = 2; // Start after opcode
+  let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both
   for (let i = 0; i < display.length; i++, matchIndex++) {
     const parsedVal = match[matchIndex];
     const displayEntry = display[i];
     switch (displayEntry) {
       case "rs":
-        rs = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
+        rs = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
         if (rs === undefined)
           throw new Error(`Unrecognized rs register ${parsedVal}`);
         break;
 
       case "rt":
-        rt = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
+        rt = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
         if (rt === undefined)
           throw new Error(`Unrecognized rt register ${parsedVal}`);
         break;
 
       case "rd":
       case "rd?": {
-        const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getRegBits */](parsedVal);
+        const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
         if (tryRd === undefined) {
           if (displayEntry === "rd?")
             break;
@@ -1488,6 +1540,8 @@ function _parse(value) {
       return _buildIFormat(op, rs || fs, rt || ft, imm);
     case "J":
       return _buildJFormat(op, imm, opcodeObj.shift);
+    case "FR":
+      return _buildFRFormat(op, fmt, fs, ft, fd, f);
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
@@ -1517,6 +1571,16 @@ function _buildJFormat(op, imm, shift) {
   return asm >>> 0;
 }
 
+function _buildFRFormat(op, fmt, fs, ft, fd, f) {
+  let asm = (op << 26);
+  asm |= (fmt << 21);
+  asm |= (ft << 16);
+  asm |= (fs << 11);
+  asm |= (fd << 6);
+  asm |= f;
+  return asm >>> 0;
+}
+
 function parseSpecialOp(opcode) {
   if (opcode.toLowerCase() === "nop")
     return 0;
@@ -1526,6 +1590,17 @@ function parseSpecialOp(opcode) {
     return 0x0000000C;
 }
 
+function determineFmt(opcode, allowedFormats) {
+  const pieces = opcode.split(".");
+  if (!pieces.length)
+    throw `No format specified for opcode ${opcode}`;
+
+  const fmtStr = pieces[pieces.length - 1];
+  if (allowedFormats.indexOf(fmtStr) === -1)
+    throw `Format ${fmtStr} is not allowed for ${pieces[0]}. Allowed values are ${allowedFormats}`;
+
+  return __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getFmtBits */](fmtStr);
+}
 
 /***/ }),
 /* 6 */
@@ -1582,26 +1657,26 @@ function _print(inst, opts) {
 
   const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["e" /* getOpcodeDetails */](opName);
 
-  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeObj);
+  let [rs, rt, rd, fs, ft, fd, sa, fmt, imm] = _extractValues(inst, opcodeObj);
 
-  let result = _formatOpcode(opName, opts);
+  let result = _formatOpcode(opName, fmt, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
       case "rs":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rs);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rs);
       case "rt":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rt);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rt);
       case "rd":
       case "rd?":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getRegName */](rd);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rd);
 
       case "fs":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rs);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](fs || rs || 0);
       case "ft":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rt);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](ft || rt || 0);
       case "fd":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](rd);
+        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](fd || rd || 0);
     }
   }
 
@@ -1627,7 +1702,7 @@ function _print(inst, opts) {
         break;
 
       case "imm":
-        if (__WEBPACK_IMPORTED_MODULE_1__regex__["b" /* isReg */](display[i + 1])) {
+        if (__WEBPACK_IMPORTED_MODULE_1__regex__["c" /* isReg */](display[i + 1]) || __WEBPACK_IMPORTED_MODULE_1__regex__["b" /* isFloatReg */](display[i + 1])) {
           result += " " + _formatNumber(imm, opts)
             + "("
             + _formatReg(_getRegName(display[i + 1]), opts)
@@ -1650,7 +1725,7 @@ function _print(inst, opts) {
 }
 
 function _extractValues(inst, opcodeObj) {
-  let rs, rt, rd, sa, imm;
+  let rs, rt, rd, fs, ft, fd, sa, fmt, imm;
   const opcodeFormat = opcodeObj.format;
   switch (opcodeFormat) {
     case "R":
@@ -1665,11 +1740,15 @@ function _extractValues(inst, opcodeObj) {
       [imm] = _extractJFormat(inst, opcodeObj.shift);
       break;
 
+    case "FR":
+      [fmt, ft, fs, fd] = _extractFRFormat(inst);
+      break;
+
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
 
-  return [rs, rt, rd, sa, imm];
+  return [rs, rt, rd, fs, ft, fd, sa, fmt, imm];
 }
 
 function _extractRFormat(inst) {
@@ -1692,6 +1771,15 @@ function _extractIFormat(inst) {
 function _extractJFormat(inst, shift) {
   return [
     (inst & 0x03FFFFFF) << (shift ? 2 : 0)
+  ];
+}
+
+function _extractFRFormat(inst) {
+  return [
+    (inst >>> 21) & 0x1F, // fmt
+    (inst >>> 16) & 0x1F, // ft
+    (inst >>> 11) & 0x1F, // fs
+    (inst >>> 6) & 0x1F, // fd
   ];
 }
 
@@ -1722,8 +1810,12 @@ function _formatReg(regStr, opts) {
   return value;
 }
 
-function _formatOpcode(opcodeName, opts) {
-  return _applyCasing(opcodeName, opts.casing);
+function _formatOpcode(opcodeName, fmt, opts) {
+  const pieces = opcodeName.split(".");
+  let opcode = pieces[0];
+  if (pieces.indexOf("fmt") !== -1)
+    opcode += "." + __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getFmtName */](fmt);
+  return _applyCasing(opcode, opts.casing);
 }
 
 function _applyCasing(value, casing) {
@@ -1739,11 +1831,11 @@ function _applyCasing(value, casing) {
 
 function _printSpecialInst(inst, opts) {
   if (inst === 0)
-    return _formatOpcode("NOP", opts);
+    return _formatOpcode("NOP", undefined, opts);
   if (inst === 0x0000000D)
-    return _formatOpcode("BREAK", opts);
+    return _formatOpcode("BREAK", undefined, opts);
   if (inst === 0x0000000C)
-    return _formatOpcode("SYSCALL", opts);
+    return _formatOpcode("SYSCALL", undefined, opts);
 }
 
 

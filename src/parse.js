@@ -1,6 +1,6 @@
 import { getOpcodeDetails } from "./opcodes";
 import { formatImmediate, parseImmediate } from "./immediates";
-import { getRegBits } from "./regs";
+import { getRegBits, getFmtBits } from "./regs";
 import * as formats from "./regex";
 
 export function parse(value) {
@@ -40,7 +40,7 @@ function _parse(value) {
 
   const opcodeFormat = opcodeObj.format;
 
-  let op, rs, rt, rd, fs, ft, fd, sa, imm, f;
+  let op, rs, rt, rd, fs, ft, fd, sa, fmt, imm, f;
   op = opcodeObj.known["op"] || 0;
   rs = opcodeObj.known["rs"] || 0;
   rt = opcodeObj.known["rt"] || 0;
@@ -52,8 +52,15 @@ function _parse(value) {
   imm = opcodeObj.known["imm"] || 0;
   f = opcodeObj.known["f"] || 0;
 
+  if (opcodeFormat === "FR") {
+    if (opcodeObj.known.hasOwnProperty("fmt"))
+      fmt = opcodeObj.known["fmt"];
+    else
+      fmt = determineFmt(match[1], opcodeObj.formats);
+  }
+
   const display = opcodeObj.display;
-  let matchIndex = 2; // Start after opcode
+  let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both
   for (let i = 0; i < display.length; i++, matchIndex++) {
     const parsedVal = match[matchIndex];
     const displayEntry = display[i];
@@ -135,6 +142,8 @@ function _parse(value) {
       return _buildIFormat(op, rs || fs, rt || ft, imm);
     case "J":
       return _buildJFormat(op, imm, opcodeObj.shift);
+    case "FR":
+      return _buildFRFormat(op, fmt, fs, ft, fd, f);
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
@@ -164,6 +173,16 @@ function _buildJFormat(op, imm, shift) {
   return asm >>> 0;
 }
 
+function _buildFRFormat(op, fmt, fs, ft, fd, f) {
+  let asm = (op << 26);
+  asm |= (fmt << 21);
+  asm |= (ft << 16);
+  asm |= (fs << 11);
+  asm |= (fd << 6);
+  asm |= f;
+  return asm >>> 0;
+}
+
 function parseSpecialOp(opcode) {
   if (opcode.toLowerCase() === "nop")
     return 0;
@@ -171,4 +190,16 @@ function parseSpecialOp(opcode) {
     return 0x0000000D;
   if (opcode.toLowerCase() === "syscall")
     return 0x0000000C;
+}
+
+function determineFmt(opcode, allowedFormats) {
+  const pieces = opcode.split(".");
+  if (!pieces.length)
+    throw `No format specified for opcode ${opcode}`;
+
+  const fmtStr = pieces[pieces.length - 1];
+  if (allowedFormats.indexOf(fmtStr) === -1)
+    throw `Format ${fmtStr} is not allowed for ${pieces[0]}. Allowed values are ${allowedFormats}`;
+
+  return getFmtBits(fmtStr);
 }

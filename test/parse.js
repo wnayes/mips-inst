@@ -56,4 +56,12 @@ describe("parse", () => {
       ]);
     });
   });
+
+  describe("error cases", () => {
+    it("catches bad formats", () => {
+      assert.throws(() => {
+        parse("ADD.T F26 F26 F0");
+      });
+    });
+  });
 });

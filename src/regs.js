@@ -54,3 +54,22 @@ export function getFloatRegName(bits) {
 
   return "F" + bits;
 }
+
+const fmts = {
+  S: 16,
+  D: 17,
+  W: 20,
+  L: 21,
+};
+
+export function getFmtBits(fmtStr) {
+  return fmts[fmtStr.toUpperCase()];
+}
+
+export function getFmtName(bits) {
+  for (let name in fmts) {
+    if (fmts[name] === bits)
+      return name;
+  }
+  return "";
+}

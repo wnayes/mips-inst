@@ -28,6 +28,8 @@ exports.testCases = [
   ["SDC1 F20 0x20(SP)", 0xF7B40020],
   ["LWC1 F2 0x40(S0)", 0xC6020040],
   ["SWC1 F24 0x8(V0)", 0xE4580008],
+  ["ADD.S F26 F26 F0", 0x4600D680],
+  ["ADD.D F26 F26 F0", 0x4620D680],
 
   // Comma tests
   ["ADDU A0, A2, R0", 0x00C02021, { commas: true }],

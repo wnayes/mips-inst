@@ -1,6 +1,6 @@
 import { findMatch, getOpcodeDetails } from "./opcodes";
 import { isReg, isFloatReg } from "./regex";
-import { getRegName, getFloatRegName } from "./regs";
+import { getRegName, getFloatRegName, getFmtName } from "./regs";
 import { makeInt16 } from "./immediates";
 
 // opts:
@@ -43,9 +43,9 @@ function _print(inst, opts) {
 
   const opcodeObj = getOpcodeDetails(opName);
 
-  let [rs, rt, rd, sa, imm] = _extractValues(inst, opcodeObj);
+  let [rs, rt, rd, fs, ft, fd, sa, fmt, imm] = _extractValues(inst, opcodeObj);
 
-  let result = _formatOpcode(opName, opts);
+  let result = _formatOpcode(opName, fmt, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
@@ -58,11 +58,11 @@ function _print(inst, opts) {
         return getRegName(rd);
 
       case "fs":
-        return getFloatRegName(rs);
+        return getFloatRegName(fs || rs || 0);
       case "ft":
-        return getFloatRegName(rt);
+        return getFloatRegName(ft || rt || 0);
       case "fd":
-        return getFloatRegName(rd);
+        return getFloatRegName(fd || rd || 0);
     }
   }
 
@@ -88,7 +88,7 @@ function _print(inst, opts) {
         break;
 
       case "imm":
-        if (isReg(display[i + 1])) {
+        if (isReg(display[i + 1]) || isFloatReg(display[i + 1])) {
           result += " " + _formatNumber(imm, opts)
             + "("
             + _formatReg(_getRegName(display[i + 1]), opts)
@@ -111,7 +111,7 @@ function _print(inst, opts) {
 }
 
 function _extractValues(inst, opcodeObj) {
-  let rs, rt, rd, sa, imm;
+  let rs, rt, rd, fs, ft, fd, sa, fmt, imm;
   const opcodeFormat = opcodeObj.format;
   switch (opcodeFormat) {
     case "R":
@@ -126,11 +126,15 @@ function _extractValues(inst, opcodeObj) {
       [imm] = _extractJFormat(inst, opcodeObj.shift);
       break;
 
+    case "FR":
+      [fmt, ft, fs, fd] = _extractFRFormat(inst);
+      break;
+
     default:
       throw `Unrecognized opcode format ${opcodeFormat}`;
   }
 
-  return [rs, rt, rd, sa, imm];
+  return [rs, rt, rd, fs, ft, fd, sa, fmt, imm];
 }
 
 function _extractRFormat(inst) {
@@ -153,6 +157,15 @@ function _extractIFormat(inst) {
 function _extractJFormat(inst, shift) {
   return [
     (inst & 0x03FFFFFF) << (shift ? 2 : 0)
+  ];
+}
+
+function _extractFRFormat(inst) {
+  return [
+    (inst >>> 21) & 0x1F, // fmt
+    (inst >>> 16) & 0x1F, // ft
+    (inst >>> 11) & 0x1F, // fs
+    (inst >>> 6) & 0x1F, // fd
   ];
 }
 
@@ -183,8 +196,12 @@ function _formatReg(regStr, opts) {
   return value;
 }
 
-function _formatOpcode(opcodeName, opts) {
-  return _applyCasing(opcodeName, opts.casing);
+function _formatOpcode(opcodeName, fmt, opts) {
+  const pieces = opcodeName.split(".");
+  let opcode = pieces[0];
+  if (pieces.indexOf("fmt") !== -1)
+    opcode += "." + getFmtName(fmt);
+  return _applyCasing(opcode, opts.casing);
 }
 
 function _applyCasing(value, casing) {
@@ -200,9 +217,9 @@ function _applyCasing(value, casing) {
 
 function _printSpecialInst(inst, opts) {
   if (inst === 0)
-    return _formatOpcode("NOP", opts);
+    return _formatOpcode("NOP", undefined, opts);
   if (inst === 0x0000000D)
-    return _formatOpcode("BREAK", opts);
+    return _formatOpcode("BREAK", undefined, opts);
   if (inst === 0x0000000C)
-    return _formatOpcode("SYSCALL", opts);
+    return _formatOpcode("SYSCALL", undefined, opts);
 }

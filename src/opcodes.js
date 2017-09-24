@@ -37,6 +37,13 @@ export function findMatch(inst) {
         if (knownRt !== undefined && knownRt !== rt)
           continue;
       }
+      else if (opDetails.format === "FR") {
+        const f = inst & 0x2F;
+
+        // Function must also match
+        if ((opDetails.known["f"] || 0) !== f)
+          continue;
+      }
       else if (opDetails.format === "I") {
         const rs = (inst >>> 21) & 0x1F;
         const rt = (inst >>> 16) & 0x1F;
@@ -61,6 +68,14 @@ const opcodeDetails = {
     display: [rd, rs, rt],
     known: {
       [f]: 0b100000
+    }
+  },
+  "add.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs, ft],
+    known: {
+      [op]: 0b010001
     }
   },
   addi: {
