@@ -1,3 +1,5 @@
+import { getFmtBits } from "./regs"
+
 export const op = "op";
 export const rs = "rs";
 export const rt = "rt";
@@ -43,6 +45,19 @@ export function findMatch(inst) {
         // Function must also match
         if ((opDetails.known["f"] || 0) !== f)
           continue;
+
+        // Format should be one of the allowed ones
+        let foundFmt = false;
+        const fmt = (inst >>> 21) & 0x1F;
+        for (let i = 0; i < opDetails.formats.length; i++) {
+          let format = opDetails.formats[i];
+          if (getFmtBits(format) === fmt) {
+            foundFmt = true;
+            break;
+          }
+        }
+        if (!foundFmt)
+          continue;
       }
       else if (opDetails.format === "I") {
         const rs = (inst >>> 21) & 0x1F;
@@ -75,7 +90,8 @@ const opcodeDetails = {
     formats: ["S", "D"],
     display: [fd, fs, ft],
     known: {
-      [op]: 0b010001
+      [op]: 0b010001,
+      [f]: 0b000000,
     }
   },
   addi: {
@@ -112,6 +128,15 @@ const opcodeDetails = {
     known: {
       [op]: 0b001100
     },
+  },
+  bc1f: {
+    format: "I",
+    display: [imm], // off
+    known: {
+      [op]: 0b010001,
+      [rs]: 0b01000,
+      [rt]: 0b00000,
+    }
   },
   beq: {
     format: "I",

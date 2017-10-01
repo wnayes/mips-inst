@@ -80,6 +80,9 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["e"] = getOpcodeDetails;
 /* harmony export (immutable) */ __webpack_exports__["b"] = findMatch;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(1);
+
+
 const op = "op";
 /* unused harmony export op */
 
@@ -145,6 +148,19 @@ function findMatch(inst) {
         // Function must also match
         if ((opDetails.known["f"] || 0) !== f)
           continue;
+
+        // Format should be one of the allowed ones
+        let foundFmt = false;
+        const fmt = (inst >>> 21) & 0x1F;
+        for (let i = 0; i < opDetails.formats.length; i++) {
+          let format = opDetails.formats[i];
+          if (__WEBPACK_IMPORTED_MODULE_0__regs__["b" /* getFmtBits */](format) === fmt) {
+            foundFmt = true;
+            break;
+          }
+        }
+        if (!foundFmt)
+          continue;
       }
       else if (opDetails.format === "I") {
         const rs = (inst >>> 21) & 0x1F;
@@ -177,7 +193,8 @@ const opcodeDetails = {
     formats: ["S", "D"],
     display: [fd, fs, ft],
     known: {
-      [op]: 0b010001
+      [op]: 0b010001,
+      [f]: 0b000000,
     }
   },
   addi: {
@@ -214,6 +231,15 @@ const opcodeDetails = {
     known: {
       [op]: 0b001100
     },
+  },
+  bc1f: {
+    format: "I",
+    display: [imm], // off
+    known: {
+      [op]: 0b010001,
+      [rs]: 0b01000,
+      [rt]: 0b00000,
+    }
   },
   beq: {
     format: "I",
@@ -1122,52 +1148,6 @@ const opcodeDetails = {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = parseImmediate;
-/* harmony export (immutable) */ __webpack_exports__["a"] = formatImmediate;
-/* harmony export (immutable) */ __webpack_exports__["b"] = makeInt16;
-function parseImmediate(immArr, maxBits, signed) {
-  let [neg, base, num] = immArr;
-  base = base.toLowerCase();
-
-  let value;
-  if (base === "b")
-    value = parseInt(num, 2);
-  else if (base === "o")
-    value = parseInt(num, 8);
-  else if (base === "x")
-    value = parseInt(num, 16);
-  else
-    value = parseInt(num, 10);
-
-  if (maxBits === 16) {
-    if (signed) {
-      value = makeInt16(value);
-    }
-  }
-
-  if (neg)
-    value = -value;
-
-  return value;
-}
-
-function formatImmediate(value, maxBits) {
-  if (maxBits === 16) {
-    value = (new Uint16Array([value]))[0];
-  }
-
-  return value;
-}
-
-function makeInt16(value) {
-  return (new Int16Array([value]))[0];
-}
-
-/***/ }),
-/* 2 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
 /* harmony export (immutable) */ __webpack_exports__["d"] = getRegBits;
 /* harmony export (immutable) */ __webpack_exports__["e"] = getRegName;
 /* harmony export (immutable) */ __webpack_exports__["a"] = getFloatRegName;
@@ -1249,6 +1229,52 @@ function getFmtName(bits) {
   return "";
 }
 
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["c"] = parseImmediate;
+/* harmony export (immutable) */ __webpack_exports__["a"] = formatImmediate;
+/* harmony export (immutable) */ __webpack_exports__["b"] = makeInt16;
+function parseImmediate(immArr, maxBits, signed) {
+  let [neg, base, num] = immArr;
+  base = base.toLowerCase();
+
+  let value;
+  if (base === "b")
+    value = parseInt(num, 2);
+  else if (base === "o")
+    value = parseInt(num, 8);
+  else if (base === "x")
+    value = parseInt(num, 16);
+  else
+    value = parseInt(num, 10);
+
+  if (maxBits === 16) {
+    if (signed) {
+      value = makeInt16(value);
+    }
+  }
+
+  if (neg)
+    value = -value;
+
+  return value;
+}
+
+function formatImmediate(value, maxBits) {
+  if (maxBits === 16) {
+    value = (new Uint16Array([value]))[0];
+  }
+
+  return value;
+}
+
+function makeInt16(value) {
+  return (new Int16Array([value]))[0];
+}
 
 /***/ }),
 /* 3 */
@@ -1393,8 +1419,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__regex__ = __webpack_require__(3);
 
 
@@ -1610,8 +1636,8 @@ function determineFmt(opcode, allowedFormats) {
 /* harmony export (immutable) */ __webpack_exports__["a"] = print;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__regex__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__immediates__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__immediates__ = __webpack_require__(2);
 
 
 
