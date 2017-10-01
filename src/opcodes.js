@@ -46,6 +46,11 @@ export function findMatch(inst) {
         if ((opDetails.known["f"] || 0) !== f)
           continue;
 
+        const ft = (inst >>> 16) & 0x1F;
+        const knownFt = opDetails.known["ft"];
+        if (knownFt !== undefined && knownFt !== ft)
+          continue;
+
         // Format should be one of the allowed ones
         let foundFmt = false;
         const fmt = (inst >>> 21) & 0x1F;
@@ -78,6 +83,16 @@ export function findMatch(inst) {
 }
 
 const opcodeDetails = {
+  "abs.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b000101,
+      [ft]: 0b00000,
+    }
+  },
   add: {
     format: "R",
     display: [rd, rs, rt],
@@ -136,6 +151,33 @@ const opcodeDetails = {
       [op]: 0b010001,
       [rs]: 0b01000,
       [rt]: 0b00000,
+    }
+  },
+  bc1fl: {
+    format: "I",
+    display: [imm], // off
+    known: {
+      [op]: 0b010001,
+      [rs]: 0b01000,
+      [rt]: 0b00010,
+    }
+  },
+  bc1t: {
+    format: "I",
+    display: [imm], // off
+    known: {
+      [op]: 0b010001,
+      [rs]: 0b01000,
+      [rt]: 0b00001,
+    }
+  },
+  bc1tl: {
+    format: "I",
+    display: [imm], // off
+    known: {
+      [op]: 0b010001,
+      [rs]: 0b01000,
+      [rt]: 0b00011,
     }
   },
   beq: {
