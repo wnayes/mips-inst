@@ -311,6 +311,46 @@ const opcodeDetails = {
   //     break: 0b001101
   //   },
   // },
+  "ceil.l.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b001010,
+      [ft]: 0b00000,
+    }
+  },
+  "ceil.w.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b001110,
+      [ft]: 0b00000,
+    }
+  },
+  cfc1: { // TODO: fs is unusual
+    format: "R",
+    display: [rt, fs],
+    known: {
+      [op]: 0b010001,
+      [sa]: 0b00000,
+      [f]: 0b000000,
+      [rs]: 0b00010,
+    }
+  },
+  ctc1: { // TODO: fs is unusual
+    format: "R",
+    display: [rt, fs],
+    known: {
+      [op]: 0b010001,
+      [sa]: 0b00000,
+      [f]: 0b000000,
+      [rs]: 0b00110,
+    }
+  },
   cop0: {
     format: "J",
     shift: false,
@@ -342,6 +382,46 @@ const opcodeDetails = {
     known: {
       [op]: 0b010011
     },
+  },
+  "cvt.d.fmt": {
+    format: "FR",
+    formats: ["S", "W", "L"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b100001,
+      [ft]: 0b00000,
+    }
+  },
+  "cvt.l.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b100101,
+      [ft]: 0b00000,
+    }
+  },
+  "cvt.s.fmt": {
+    format: "FR",
+    formats: ["D", "W", "L"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b100000,
+      [ft]: 0b00000,
+    }
+  },
+  "cvt.w.fmt": {
+    format: "FR",
+    formats: ["S", "D"],
+    display: [fd, fs],
+    known: {
+      [op]: 0b010001,
+      [f]: 0b100100,
+      [ft]: 0b00000,
+    }
   },
   dadd: {
     format: "R",
