@@ -33,6 +33,28 @@ describe("print", () => {
       ]);
     });
   });
+
+  describe("BREAK", () => {
+    it("handles error codes", () => {
+      assert.equal(print(0x0007000D), "BREAK");
+    });
+  });
+
+  describe("SYSCALL", () => {
+    it("handles codes", () => {
+      assert.equal(print(0x005CCCCC), "SYSCALL");
+    });
+  });
+
+  describe("extra codes", () => {
+    it("TLTU", () => {
+      assert.equal(print(0x01110333), "TLTU T0 S1");
+    });
+
+    it("TGE", () => {
+      assert.equal(print(0x00F00030), "TGE A3 S0");
+    });
+  });
 });
 
 function padZero(value, minLen) {

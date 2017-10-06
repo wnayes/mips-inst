@@ -1,7 +1,8 @@
-import { getOpcodeDetails } from "./opcodes";
-import { formatImmediate, parseImmediate } from "./immediates";
-import { getRegBits, getFmtBits } from "./regs";
+import { getOpcodeDetails, getValueBitLength } from "./opcodes";
+import { parseImmediate, getImmFormatDetails } from "./immediates";
+import { getRegBits, getFmtBits, getFmt3Bits, getCondBits } from "./regs";
 import * as formats from "./regex";
+import { isBinaryLiteral, makeBitMaskFromString, makeBitMask } from "./bitstrings";
 
 export function parse(value) {
   if (Array.isArray(value)) {
@@ -23,11 +24,6 @@ function _parse(value) {
   if (!opcode)
     throw `Could not parse opcode from ${value}`;
 
-  // TODO: Generalize
-  const specialCode = parseSpecialOp(opcode);
-  if (specialCode !== undefined)
-    return specialCode;
-
   let opcodeObj = getOpcodeDetails(opcode);
   if (!opcodeObj) {
     throw `Opcode ${opcode} was not recognized`;
@@ -38,168 +34,143 @@ function _parse(value) {
   if (!match)
     throw `Could not parse instruction: ${value}`;
 
-  const opcodeFormat = opcodeObj.format;
+  let values = {};
 
-  let op, rs, rt, rd, fs, ft, fd, sa, fmt, imm, f;
-  op = opcodeObj.known["op"] || 0;
-  rs = opcodeObj.known["rs"] || 0;
-  rt = opcodeObj.known["rt"] || 0;
-  rd = opcodeObj.known["rd"] || 0;
-  fs = opcodeObj.known["fs"] || 0;
-  ft = opcodeObj.known["ft"] || 0;
-  fd = opcodeObj.known["fd"] || 0;
-  sa = opcodeObj.known["sa"] || 0;
-  imm = opcodeObj.known["imm"] || 0;
-  f = opcodeObj.known["f"] || 0;
-
-  if (opcodeFormat === "FR") {
-    if (opcodeObj.known.hasOwnProperty("fmt"))
-      fmt = opcodeObj.known["fmt"];
-    else
-      fmt = determineFmt(match[1], opcodeObj.formats);
+  if (opcode.indexOf(".fmt") !== -1 || opcode.indexOf(".cond") !== -1) {
+    determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);
   }
 
   const display = opcodeObj.display;
   let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both
   for (let i = 0; i < display.length; i++, matchIndex++) {
     const parsedVal = match[matchIndex];
-    const displayEntry = display[i];
+    let displayEntry = display[i];
+
+    const optional = displayEntry.endsWith("?");
+    displayEntry = displayEntry.replace("?", "");
+
     switch (displayEntry) {
+      case "(":
+      case ")":
+        matchIndex--; // Eh
+        continue;
+
       case "rs":
-        rs = getRegBits(parsedVal);
-        if (rs === undefined)
-          throw new Error(`Unrecognized rs register ${parsedVal}`);
-        break;
-
-      case "rt":
-        rt = getRegBits(parsedVal);
-        if (rt === undefined)
-          throw new Error(`Unrecognized rt register ${parsedVal}`);
-        break;
-
       case "rd":
-      case "rd?": {
-        const tryRd = getRegBits(parsedVal);
-        if (tryRd === undefined) {
-          if (displayEntry === "rd?")
-            break;
+      case "rt": {
+        const tryReg = getRegBits(parsedVal);
+        if (tryReg === undefined) {
+          if (optional)
+            continue;
 
-          throw new Error(`Unrecognized rd register ${parsedVal}`);
+          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
         }
-        rd = tryRd;
-        break;
+        values[displayEntry] = tryReg;
+        continue;
       }
 
       case "fs":
-        fs = parseInt(parsedVal);
-        if (isNaN(fs))
-          throw new Error(`Unrecognized fs register ${parsedVal}`);
-        break;
-
       case "ft":
-        ft = parseInt(parsedVal);
-        if (isNaN(ft))
-          throw new Error(`Unrecognized ft register ${parsedVal}`);
-        break;
-
       case "fd":
-        fd = parseInt(parsedVal);
-        if (isNaN(fd))
-          throw new Error(`Unrecognized fd register ${parsedVal}`);
-        break;
-
-      case "sa":
-      case "imm": {
-        let value;
-        const immPieces = [match[i + 2], match[i + 3], match[i + 4]];
-        if (opcodeFormat === "I" || opcodeFormat === "R") {
-          value = parseImmediate(immPieces, 16, true);
-        }
-        else if (opcodeFormat === "J") {
-          value = parseImmediate(immPieces, 32);
-        }
-        else {
-          throw `Immediate in invalid opcode format ${opcodeFormat}`;
-        }
-
-        if (displayEntry === "imm")
-          imm = value;
-        else if (displayEntry === "sa")
-          sa = value;
-
-        matchIndex += 2;
-        break;
-      }
-      default:
-        throw `Unrecognized opcode display entry ${displayEntry}`;
+      case "fr":
+        values[displayEntry] = parseInt(parsedVal);
+        if (isNaN(values[displayEntry]))
+          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
+        continue;
     }
+
+    const immDetails = getImmFormatDetails(displayEntry);
+    if (immDetails) {
+      let value;
+      const immPieces = [match[matchIndex], match[matchIndex + 1], match[matchIndex + 2]];
+
+      if (!optional || immPieces[2]) {
+        value = parseImmediate(immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
+        values[displayEntry] = value;
+      }
+
+      matchIndex += 2;
+
+      continue;
+    }
+
+    throw `Unrecognized opcode display entry ${displayEntry}`;
   }
 
-  switch (opcodeFormat) {
-    case "R":
-      return _buildRFormat(op, rs || fs, rt || ft, rd || fd, sa, f);
-    case "I":
-      return _buildIFormat(op, rs || fs, rt || ft, imm);
-    case "J":
-      return _buildJFormat(op, imm, opcodeObj.shift);
-    case "FR":
-      return _buildFRFormat(op, fmt, fs, ft, fd, f);
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
+  return bitsFromFormat(opcodeObj.format, values);
+}
+
+function bitsFromFormat(format, values) {
+  let output = 0;
+  let bitOffset = 0;
+  for (let i = 0; i < format.length; i++) {
+    let writeResult;
+    let piece = format[i];
+    let bitLength = getValueBitLength(Array.isArray(piece) ? piece[0] : piece);
+    output = (output << bitLength) >>> 0;
+    if (Array.isArray(piece)) {
+      for (let j = 0; j < piece.length; j++) {
+        writeResult = writeBitsForPiece(piece[j], output, values);
+        if (writeResult.wrote) {
+          output = writeResult.output;
+          break; // j
+        }
+      }
+    }
+    else {
+      writeResult = writeBitsForPiece(piece, output, values);
+      if (writeResult.wrote) {
+        output = writeResult.output;
+      }
+    }
+
+    bitOffset += bitLength;
   }
+
+  if (bitOffset != 32)
+    throw new Error("Incorrect number of bits written for format " + format);
+
+  return output;
 }
 
-function _buildRFormat(op, rs, rt, rd, sa, f) {
-  let asm = (op << 26);
-  asm |= (rs << 21);
-  asm |= (rt << 16);
-  asm |= (rd << 11);
-  asm |= (sa << 6);
-  asm |= f;
-  return asm >>> 0;
+function writeBitsForPiece(piece, output, values) {
+  let wrote = false;
+  if (isBinaryLiteral(piece)) {
+    output |= makeBitMaskFromString(piece);
+    wrote = true;
+  }
+  else if (values[piece] !== undefined) {
+    let value = values[piece] & makeBitMask(getValueBitLength(piece));
+    wrote = true;
+    output |= value;
+  }
+
+  return {
+    wrote: wrote,
+    output: output >>> 0,
+  };
 }
 
-function _buildIFormat(op, rs, rt, imm) {
-  let asm = (op << 26);
-  asm |= (rs << 21);
-  asm |= (rt << 16);
-  asm |= formatImmediate(imm, 16);
-  return asm >>> 0;
-}
+function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, format, values) {
+  const givenPieces = givenOpcode.split(".");
+  const genericPieces = genericOpcode.split(".");
+  if (givenPieces.length !== genericPieces.length)
+    throw `Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`;
 
-function _buildJFormat(op, imm, shift) {
-  let asm = (op << 26);
-  asm |= (shift ? imm >>> 2 : imm) & 0x03FFFFFF;
-  return asm >>> 0;
-}
+  for (let i = 0; i < genericPieces.length; i++) {
+    const genericPiece = genericPieces[i];
 
-function _buildFRFormat(op, fmt, fs, ft, fd, f) {
-  let asm = (op << 26);
-  asm |= (fmt << 21);
-  asm |= (ft << 16);
-  asm |= (fs << 11);
-  asm |= (fd << 6);
-  asm |= f;
-  return asm >>> 0;
-}
+    if (genericPiece === "fmt" || genericPiece === "ftm3") {
+      if (allowedFormats.indexOf(givenPieces[i]) === -1)
+        throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;
 
-function parseSpecialOp(opcode) {
-  if (opcode.toLowerCase() === "nop")
-    return 0;
-  if (opcode.toLowerCase() === "break")
-    return 0x0000000D;
-  if (opcode.toLowerCase() === "syscall")
-    return 0x0000000C;
-}
+      if (genericPiece === "fmt")
+        values["fmt"] = getFmtBits(givenPieces[i]);
+      else if (genericPiece === "fmt3")
+        values["fmt3"] = getFmt3Bits(givenPieces[i]);
+    }
 
-function determineFmt(opcode, allowedFormats) {
-  const pieces = opcode.split(".");
-  if (!pieces.length)
-    throw `No format specified for opcode ${opcode}`;
-
-  const fmtStr = pieces[pieces.length - 1];
-  if (allowedFormats.indexOf(fmtStr) === -1)
-    throw `Format ${fmtStr} is not allowed for ${pieces[0]}. Allowed values are ${allowedFormats}`;
-
-  return getFmtBits(fmtStr);
+    if (genericPiece === "cond")
+      values["cond"] = getCondBits(givenPieces[i]);
+  }
 }

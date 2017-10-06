@@ -1,4 +1,4 @@
-export function parseImmediate(immArr, maxBits, signed) {
+export function parseImmediate(immArr, maxBits, signed, shift) {
   let [neg, base, num] = immArr;
   base = base.toLowerCase();
 
@@ -11,6 +11,10 @@ export function parseImmediate(immArr, maxBits, signed) {
     value = parseInt(num, 16);
   else
     value = parseInt(num, 10);
+
+  if (shift) {
+    value >>>= shift;
+  }
 
   if (maxBits === 16) {
     if (signed) {
@@ -34,4 +38,29 @@ export function formatImmediate(value, maxBits) {
 
 export function makeInt16(value) {
   return (new Int16Array([value]))[0];
+}
+
+export function getImmFormatDetails(formatVal) {
+  if (formatVal.indexOf("int") === -1) {
+    if (formatVal.substr(0, 2) === "cc") {
+      return {
+        signed: false,
+        bits: 4,
+        shift: false,
+      };
+    }
+
+    return null; // Not an immediate
+  }
+
+  let shift = 0;
+  const shiftIndex = formatVal.indexOf("shift");
+  if (shiftIndex > 0)
+    shift = formatVal.substr(shiftIndex).match(/\d+/g);
+
+  return {
+    signed: formatVal[0] !== "u",
+    bits: parseInt(formatVal.match(/\d+/g)),
+    shift: shift,
+  };
 }

@@ -1,1162 +1,879 @@
-import { getFmtBits } from "./regs"
+import { getFmtBits, getFmt3Bits } from "./regs";
+import { isBinaryLiteral, compareBits, padBitString } from "./bitstrings";
+import { getImmFormatDetails } from "./immediates";
 
-export const op = "op";
-export const rs = "rs";
-export const rt = "rt";
-export const rd = "rd";
-export const fs = "fs";
-export const ft = "ft";
-export const fd = "fd";
-export const sa = "sa";
-export const imm = "imm";
-export const f = "f";
+const rs = "rs";
+const rt = "rt";
+const rd = "rd";
+const fs = "fs";
+const ft = "ft";
+const fd = "fd";
+const fr = "fr";
+const sa = "uint5";
+const uint5 = "uint5";
+const uint10 = "uint10";
+const int16 = "int16";
+const uint16 = "uint16";
+const uint20 = "uint20";
+const uint26 = "uint26";
+const uint26shift2 = "uint26shift2";
+const cc = "cc";
+const cond = "cond";
+const fmt = "fmt";
+const fmt3 = "fmt3";
 
 export function getOpcodeDetails(opcode) {
   return opcodeDetails[opcode.toLowerCase()];
 }
 
+export function getValueBitLength(str) {
+  if (isBinaryLiteral(str))
+    return str.length;
+
+  str = str.replace("?", "");
+  switch (str) {
+    case "cc":
+    case "fmt3":
+      return 3;
+
+    case "cond":
+      return 4;
+
+    case "rs":
+    case "rt":
+    case "rd":
+    case "fs":
+    case "ft":
+    case "fd":
+    case "fr":
+    case "sa":
+    case "fmt":
+      return 5;
+  }
+
+  const immDetails = getImmFormatDetails(str);
+  if (immDetails) {
+    return immDetails.bits;
+  }
+
+  throw new Error(`Unrecongized format value: ${str}`);
+}
+
 // returns name
 export function findMatch(inst) {
-  const op = inst >>> 26;
-
+  let bestMatch = "";
+  let bestMatchScore = 0;
   for (let opName in opcodeDetails) {
-    const opDetails = opcodeDetails[opName];
-    if ((opDetails.known["op"] || 0) === op) {
-      // For R, we must also match the function
-      if (opDetails.format === "R") {
-        const rs = (inst >>> 21) & 0x1F;
-        const rt = (inst >>> 16) & 0x1F;
-        const f = inst & 0x2F;
-
-        if ((opDetails.known["f"] || 0) !== f)
-          continue;
-
-        const knownRs = opDetails.known["rs"];
-        if (knownRs !== undefined && knownRs !== rs)
-          continue;
-
-        const knownRt = opDetails.known["rt"];
-        if (knownRt !== undefined && knownRt !== rt)
-          continue;
-      }
-      else if (opDetails.format === "FR") {
-        const f = inst & 0x2F;
-
-        // Function must also match
-        if ((opDetails.known["f"] || 0) !== f)
-          continue;
-
-        const ft = (inst >>> 16) & 0x1F;
-        const knownFt = opDetails.known["ft"];
-        if (knownFt !== undefined && knownFt !== ft)
-          continue;
-
-        // Format should be one of the allowed ones
-        let foundFmt = false;
-        const fmt = (inst >>> 21) & 0x1F;
-        for (let i = 0; i < opDetails.formats.length; i++) {
-          let format = opDetails.formats[i];
-          if (getFmtBits(format) === fmt) {
-            foundFmt = true;
-            break;
-          }
-        }
-        if (!foundFmt)
-          continue;
-      }
-      else if (opDetails.format === "I") {
-        const rs = (inst >>> 21) & 0x1F;
-        const rt = (inst >>> 16) & 0x1F;
-
-        const knownRs = opDetails.known["rs"];
-        if (knownRs !== undefined && knownRs !== rs)
-          continue;
-
-        const knownRt = opDetails.known["rt"];
-        if (knownRt !== undefined && knownRt !== rt)
-          continue;
-      }
-
-      return opName;
+    const format = opcodeDetails[opName].format;
+    const fmts = opcodeDetails[opName].fmts;
+    const score = formatMatches(inst, format, fmts);
+    if (score > bestMatchScore) {
+      bestMatch = opName;
+      bestMatchScore = score;
     }
   }
+
+  return bestMatch;
+}
+
+// Returns number of literal bits matched, if the overall format matches.
+function formatMatches(number, format, fmts) {
+  let score = 0;
+  let tempScore;
+  let bitOffset = 0;
+  for (let i = format.length - 1; i >= 0; i--) {
+    let bitLength;
+    let piece = format[i];
+    if (Array.isArray(piece)) {
+      let matchedOne = false;
+      for (let j = 0; j < piece.length; j++) {
+        tempScore = checkPiece(piece[j], number, bitOffset, fmts);
+        if (tempScore >= 0) {
+          matchedOne = true;
+          score += tempScore;
+          bitLength = getValueBitLength(piece[j]);
+          break; // j
+        }
+      }
+      if (!matchedOne)
+        return 0;
+    }
+    else {
+      tempScore = checkPiece(piece, number, bitOffset, fmts);
+      if (tempScore >= 0) {
+        score += tempScore;
+        bitLength = getValueBitLength(piece);
+      }
+      else {
+        return 0;
+      }
+    }
+
+    bitOffset += bitLength;
+  }
+
+  return score;
+}
+
+function checkPiece(piece, number, bitOffset, fmts) {
+  if (!isBinaryLiteral(piece)) {
+    if (piece === fmt) {
+      for (let i = 0; i < fmts.length; i++) {
+        let fmtBitString = padBitString(getFmtBits(fmts[i]).toString(2), 5);
+        if (compareBits(number, fmtBitString, bitOffset))
+          return fmtBitString.length;
+      }
+      return -1;
+    }
+
+    if (piece === fmt3) {
+      for (let i = 0; i < fmts.length; i++) {
+        let fmtBitString = padBitString(getFmt3Bits(fmts[i]).toString(2), 3);
+        if (compareBits(number, fmtBitString, bitOffset))
+          return fmtBitString.length;
+      }
+      return -1;
+    }
+
+    return 0; // non-literal contributes nothing
+  }
+
+  if (compareBits(number, piece, bitOffset))
+    return piece.length;
+
+  return -1;
 }
 
 const opcodeDetails = {
   "abs.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, "00000", fs, fd, "000101"],
+    fmts: ["S", "D"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b000101,
-      [ft]: 0b00000,
-    }
   },
   add: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000100000"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100000
-    }
   },
   "add.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, ft, fs, fd, "000000"],
+    fmts: ["S", "D"],
     display: [fd, fs, ft],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b000000,
-    }
   },
   addi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001000
-    }
+    format: ["001000", rs, rt, int16],
+    display: [rt, rs, int16],
   },
   addiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001001
-    },
+    format: ["001001", rs, rt, uint16],
+    display: [rt, rs, uint16],
   },
   addu: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000100001"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100001
-    },
   },
   and: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000100100"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100100
-    },
   },
   andi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001100
-    },
+    format: ["001100", rs, rt, uint16],
+    display: [rt, rs, uint16],
   },
   bc1f: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00000,
-    }
+    format: ["010001", "01000", [cc, "000"], "00", int16], // TODO shifting?
+    display: ["cc?", int16], // offset
   },
   bc1fl: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00010,
-    }
+    format: ["010001", "01000", [cc, "000"], "10", int16],
+    display: ["cc?", int16], // offset
   },
   bc1t: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00001,
-    }
+    format: ["010001", "01000", [cc, "000"], "01", int16],
+    display: ["cc?", int16], // offset
   },
   bc1tl: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00011,
-    }
+    format: ["010001", "01000", [cc, "000"], "11", int16],
+    display: ["cc?", int16], // offset
   },
   beq: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b000100
-    },
+    format: ["000100", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
   },
   beql: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b010100
-    },
+    format: ["010100", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
   },
   bgez: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00001,
-    },
+    format: ["000001", rs, "00001", uint16],
+    display: [rs, uint16], // offset
   },
   bgezal: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10001,
-    },
+    format: ["000001", rs, "10001", uint16],
+    display: [rs, uint16], // offset
   },
   bgezall: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10011,
-    },
+    format: ["000001", rs, "10011", uint16],
+    display: [rs, uint16], // offset
   },
   bgezl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00011,
-    },
+    format: ["000001", rs, "00011", uint16],
+    display: [rs, uint16], // offset
   },
   bgtz: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000111,
-      [rt]: 0,
-    },
+    format: ["000111", rs, "00000", uint16],
+    display: [rs, uint16], // offset
   },
   bgtzl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b010111,
-      [rt]: 0,
-    },
+    format: ["010111", rs, "00000", uint16],
+    display: [rs, uint16], // offset
   },
   blez: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000110,
-      [rt]: 0,
-    },
+    format: ["000110", rs, "00000", uint16],
+    display: [rs, uint16], // offset
   },
   blezl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b010110,
-      [rt]: 0,
-    },
+    format: ["010110", rs, "00000", uint16],
+    display: [rs, uint16], // offset
   },
   bltz: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0,
-    },
+    format: ["000001", rs, "00000", uint16],
+    display: [rs, uint16], // offset
   },
   bltzal: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10000,
-    },
+    format: ["000001", rs, "10000", uint16],
+    display: [rs, uint16], // offset
   },
   bltzall: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10010,
-    },
+    format: ["000001", rs, "10010", uint16],
+    display: [rs, uint16], // offset
   },
   bltzl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00010,
-    },
+    format: ["000001", rs, "00010", uint16],
+    display: [rs, uint16], // offset
   },
   bne: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b000101
-    },
+    format: ["000101", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
   },
   bnel: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b010101
-    },
+    format: ["010101", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
   },
-  // break: {
-  //   format: "BREAK",
-  //   display: [],
-  //   known: {
-  //     break: 0b001101
-  //   },
-  // },
+  break: {
+    format: ["000000", uint20, "001101"],
+    display: [],
+  },
+  "c.cond.fmt": {
+    format: ["010001", fmt, ft, fs, [cc, "000"], "00", "11", cond],
+    fmts: ["S", "D"],
+    display: ["cc?", fs, ft],
+  },
   "ceil.l.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, "00000", fs, fd, "001010"],
+    fmts: ["S", "D"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b001010,
-      [ft]: 0b00000,
-    }
   },
   "ceil.w.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, "00000", fs, fd, "001110"],
+    fmts: ["S", "D"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b001110,
-      [ft]: 0b00000,
-    }
   },
-  cfc1: { // TODO: fs is unusual
-    format: "R",
+  cfc1: {
+    format: ["010001", "00010", rt, fs, "00000000000"],
     display: [rt, fs],
-    known: {
-      [op]: 0b010001,
-      [sa]: 0b00000,
-      [f]: 0b000000,
-      [rs]: 0b00010,
-    }
   },
-  ctc1: { // TODO: fs is unusual
-    format: "R",
+  ctc1: {
+    format: ["010001", "00110", rt, fs, "00000000000"],
     display: [rt, fs],
-    known: {
-      [op]: 0b010001,
-      [sa]: 0b00000,
-      [f]: 0b000000,
-      [rs]: 0b00110,
-    }
   },
   cop0: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010000
-    },
+    format: ["010000", uint26],
+    display: [uint26], // cop_fun
   },
   cop1: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010001
-    },
+    format: ["010001", uint26],
+    display: [uint26], // cop_fun
   },
   cop2: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010010
-    },
+    format: ["010010", uint26],
+    display: [uint26], // cop_fun
   },
   cop3: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010011
-    },
+    format: ["010011", uint26],
+    display: [uint26], // cop_fun
   },
   "cvt.d.fmt": {
-    format: "FR",
-    formats: ["S", "W", "L"],
+    format: ["010001", fmt, "00000", fs, fd, "100001"],
+    fmts: ["S", "W", "L"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100001,
-      [ft]: 0b00000,
-    }
   },
   "cvt.l.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, "00000", fs, fd, "100101"],
+    fmts: ["S", "D"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100101,
-      [ft]: 0b00000,
-    }
   },
   "cvt.s.fmt": {
-    format: "FR",
-    formats: ["D", "W", "L"],
+    format: ["010001", fmt, "00000", fs, fd, "100000"],
+    fmts: ["D", "W", "L"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100000,
-      [ft]: 0b00000,
-    }
   },
   "cvt.w.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
+    format: ["010001", fmt, "00000", fs, fd, "100100"],
+    fmts: ["S", "D"],
     display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100100,
-      [ft]: 0b00000,
-    }
   },
   dadd: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000101100"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101100
-    },
   },
   daddi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b011000
-    },
+    format: ["011000", rs, rt, int16],
+    display: [rt, rs, int16],
   },
   daddiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b011001
-    },
+    format: ["011001", rs, rt, uint16],
+    display: [rt, rs, uint16],
   },
   daddu: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000101101"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101101
-    },
   },
   ddiv: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011110"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011110,
-      [rd]: 0,
-    },
   },
   ddivu: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011111"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011111,
-      [rd]: 0,
-    },
   },
   div: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011010"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011010,
-      [rd]: 0,
-    },
+  },
+  "div.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000011"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
   },
   divu: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011011"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011011,
-      [rd]: 0,
-    },
+  },
+  dmfc1: {
+    format: ["010001", "00001", rt, fs, "00000000000"],
+    display: [rt, fs],
   },
   dmult: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011100"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011100,
-      [rd]: 0,
-    },
   },
   dmultu: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000011101"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011101,
-      [rd]: 0,
-    },
+  },
+  dmtc1: {
+    format: ["010001", "00101", rt, fs, "00000000000"],
+    display: [rt, fs],
   },
   dsll: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111000"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111000,
-      [rs]: 0,
-    },
   },
   dsll32: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111100"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111100,
-      [rs]: 0,
-    },
   },
   dsllv: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000010100"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b010100,
-    },
   },
   dsra: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111011"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111011,
-      [rs]: 0,
-    },
   },
   dsra32: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111111"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111111,
-      [rs]: 0,
-    },
   },
   dsrav: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000010111"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b010111,
-    },
   },
   dsrl: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111010"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111010,
-      [rs]: 0,
-    },
   },
   dsrl32: {
-    format: "R",
+    format: ["00000000000", rt, rd, sa, "111110"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b111110,
-      [rs]: 0,
-    },
   },
   dsrlv: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000010110"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b010110,
-    },
   },
   dsub: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000101110"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101110,
-    },
   },
   dsubu: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000101111"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101111,
-    },
+  },
+  "floor.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001011"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "floor.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001111"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
   },
   j: {
-    format: "J",
-    shift: true,
-    display: [imm],
-    known: {
-      [op]: 0b000010
-    },
+    format: ["000010", uint26shift2],
+    display: [uint26shift2],
   },
   jal: {
-    format: "J",
-    shift: true,
-    display: [imm],
-    known: {
-      [op]: 0b000011
-    },
+    format: ["000011", uint26shift2],
+    display: [uint26shift2],
   },
   jalr: {
-    format: "R",
+    format: ["000000", rs, "00000", [rd, "11111"], "00000", "001001"],
     display: ["rd?", rs],
-    known: {
-      [f]: 0b001001,
-      rt: 0,
-      rd: 31 // Implied unless specified
-    },
   },
   jr: {
-    format: "R",
+    format: ["000000", rs, "000000000000000", "001000"],
     display: [rs],
-    known: {
-      [f]: 0b001000,
-      rt: 0,
-      rd: 0
-    },
   },
   lb: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100000
-    },
+    format: ["100000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lbu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100100
-    },
+    format: ["100100", rs, rt, uint16],
+    display: [rt, uint16, "(", rs, ")"], // offset
   },
   ld: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110111
-    },
+    format: ["110111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   ldc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b110101
-    },
+    format: ["110101", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
   },
   ldc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110110
-    },
+    format: ["110110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   ldl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b011010
-    },
+    format: ["011010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   ldr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b011011
-    },
+    format: ["011011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ldxc1: {
+    format: ["010011", rs, rt, "00000", fd, "000001"],
+    display: [fd, rt, "(", rs, ")"], // offset
   },
   lh: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100001
-    },
+    format: ["100001", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lhu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100101
-    },
+    format: ["100101", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   ll: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110000
-    },
+    format: ["110000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lld: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110100
-    },
+    format: ["110100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lui: {
-    format: "I",
-    display: [rt, imm],
-    known: {
-      [op]: 0b001111,
-      [rs]: 0,
-    },
+    format: ["001111", "00000", rt, uint16],
+    display: [rt, uint16],
   },
   lw: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100011
-    },
+    format: ["100011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lwc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b110001
-    },
+    format: ["110001", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
   },
   lwc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110010
-    },
+    format: ["110010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lwc3: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110011
-    },
+    format: ["110011" ,rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lwl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100010
-    },
+    format: ["100010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lwr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100110
-    },
+    format: ["100110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   lwu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100111
-    },
+    format: ["100111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwxc1: {
+    format: ["010011", rs, rt, "00000", fd, "000000"],
+    display: [fd, rt, "(", rs, ")"],
+  },
+  "madd.fmt": {
+    format: ["010011", fr, ft, fs, fd, "100", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  mfc1: {
+    format: ["010001", "00000", rt, fs, "00000000000"],
+    display: [rt, fs],
   },
   mfhi: {
-    format: "R",
+    format: ["000000", "0000000000", rd, "00000", "010000"],
     display: [rd],
-    known: {
-      [f]: 0b010000,
-      [rs]: 0,
-      [rd]: 0,
-    },
   },
   mflo: {
-    format: "R",
+    format: ["000000", "0000000000", rd, "00000", "010010"],
     display: [rd],
-    known: {
-      [f]: 0b010010,
-      [rs]: 0,
-      [rd]: 0,
-    },
+  },
+  "mov.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000110"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  movf: {
+    format: ["000000", rs, cc, "00", rd, "00000", "000001"],
+    display: [rd, rs, cc],
+  },
+  "movf.fmt": {
+    format: ["010001", fmt, cc, "00", fs, fd, "010001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, cc],
   },
   movn: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "001011"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b001011,
-    },
+  },
+  "movn.fmt": {
+    format: ["010001", fmt, rt, fs, fd, "010011"],
+    fmts: ["S", "D"],
+    display: [fd, fs, rt],
+  },
+  movt: {
+    format: ["000000", rs, cc, "01", rd, "00000", "000001"],
+    display: [rd, rs, cc],
+  },
+  "movt.fmt": {
+    format: ["010001", fmt, cc, "01", fs, fd, "010001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, cc],
   },
   movz: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "001010"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b001010,
-    },
+  },
+  "movz.fmt": {
+    format: ["010001", fmt, rt, fs, fd, "010010"],
+    fmts: ["S", "D"],
+    display: [fd, fs, rt],
+  },
+  "msub.fmt": {
+    format: ["010011", fr, ft, fs, fd, "101", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  mtc1: {
+    format: ["010001", "00100", rt, fs, "00000000000"],
+    display: [ft, fs],
   },
   mthi: {
-    format: "R",
+    format: ["000000", rs, "000000000000000", "010001"],
     display: [rs],
-    known: {
-      [f]: 0b010001,
-      [rt]: 0,
-      [rd]: 0,
-    },
   },
   mtlo: {
-    format: "R",
+    format: ["000000", rs, "000000000000000", "010011"],
     display: [rs],
-    known: {
-      [f]: 0b010011
-    },
+  },
+  "mul.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000010"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
   },
   mult: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000", "011000"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011000,
-      [rd]: 0,
-    },
   },
   multu: {
-    format: "R",
+    format: ["000000", rs, rt, "0000000000", "011001"],
     display: [rs, rt],
-    known: {
-      [f]: 0b011001,
-      [rd]: 0,
-    },
   },
-  // nop: {
-  //   format: "R",
-  //   display: [],
-  //   known: {
-  //   },
-  // },
+  "neg.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000111"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "nmadd.fmt": {
+    format: ["010011", fr, ft, fs, fd, "110", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  "nmsub.fmt": {
+    format: ["010011", fr, ft, fs, fd, "111", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  nop: {
+    format: ["00000000000000000000000000000000"],
+    display: [],
+  },
   nor: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "100111"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100111
-    },
   },
   or: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "100101"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100101
-    },
   },
   ori: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001101
-    },
+    format: ["001101", rs, rt, uint16],
+    display: [rt, rs, uint16],
   },
   pref: {
-    format: "I",
-    display: [rt, imm, rs], // hint, offset, base
-    known: {
-      [op]: 0b110011
-    },
+    format: ["110011", rs, uint5, int16],
+    display: [uint5, int16, "(", rs, ")"], // hint, offset, base
+  },
+  prefx: {
+    format: ["010011", rs, rt, uint5, "00000", "001111"],
+    display: [uint5, rt, "(", rs, ")"], // hint, index, base
+  },
+  "recip.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "010101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "round.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001000"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "round.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001100"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "rsqrt.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "010110"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
   },
   sb: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101000
-    },
+    format: ["101000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sc: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111000
-    },
+    format: ["111000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   scd: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111100
-    },
+    format: ["111100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sd: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111111
-    },
+    format: ["111111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sdc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b111101
-    },
+    format: ["111101", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
   },
   sdc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111110
-    },
+    format: ["111110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sdl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101100
-    },
+    format: ["101100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sdr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101101
-    },
+    format: ["101101", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sdxc1: {
+    format: ["010011", rs, uint5, fs, "00000", "001001"],
+    display: [fs, uint5, "(", rs, ")"],
   },
   sh: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101001
-    },
+    format: ["101001", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
   },
   sll: {
-    format: "R",
+    format: ["000000", "00000", rt, rd, sa, "000000"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0
-    },
   },
   sllv: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "000100"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b000100
-    },
   },
   slt: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "101010"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101010
-    },
   },
   slti: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001010
-    },
+    format: ["001010", rs, rt, int16],
+    display: [rt, rs, int16],
   },
   sltiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001011
-    },
+    format: ["001011", rs, rt, uint16],
+    display: [rt, rs, uint16],
   },
   sltu: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "101011"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b101011
-    },
+  },
+  "sqrt.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000100"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
   },
   sra: {
-    format: "R",
+    format: ["000000", "00000", rt, rd, sa, "000011"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b000011
-    },
   },
   srav: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "000111"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b000111
-    },
   },
   srl: {
-    format: "R",
+    format: ["000000", "00000", rt, rd, sa, "000010"],
     display: [rd, rt, sa],
-    known: {
-      [f]: 0b000010
-    },
   },
   srlv: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "000110"],
     display: [rd, rt, rs],
-    known: {
-      [f]: 0b000110
-    },
   },
   sub: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "100010"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100010
-    },
+  },
+  "sub.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
   },
   subu: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "100011"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100011
-    },
   },
   sw: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101011
-    },
+    format: ["101011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
   },
   swc1: {
-    format: "I",
-    display: [ft, imm, rs],
-    known: {
-      [op]: 0b111001
-    },
+    format: ["111001", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"],
   },
   swc2: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b111010
-    },
+    format: ["111010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
   },
   swc3: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b111011
-    },
+    format: ["111011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
   },
   swl: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101010
-    },
+    format: ["101010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
   },
   swr: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101110
-    },
+    format: ["101110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swxc1: {
+    format: ["010011", rs, uint5, fs, "00000", "001000"],
+    display: [fs, uint5, "(", rs, ")"],
   },
   sync: {
-    format: "R",
+    format: ["000000", "000000000000000", "00000", "001111"],
     display: [],
-    known: {
-      [f]: 0b001111,
-      [sa]: 0,
-      [rs]: 0,
-      [rt]: 0,
-      [rd]: 0,
-    },
   },
-  // syscall: {
-  //   format: "SYSCALL",
-  //   display: [],
-  //   known: {
-  //     [f]: 0b001100,
-  //   },
-  // },
+  syscall: {
+    format: ["000000", uint20, "001100"],
+    display: [],
+  },
   teq: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110100"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110100
-    },
   },
   teqi: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01100,
-    },
+    format: ["000001", rs, "01100", int16],
+    display: [rs, int16],
   },
   tge: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110000"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110000,
-    },
   },
   tgei: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01000,
-    },
+    format: ["000001", rs, "01000", int16],
+    display: [rs, int16],
   },
   tgeiu: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01001,
-    },
+    format: ["000001", rs, "01001", uint16],
+    display: [rs, uint16],
   },
   tgeu: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110001"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110001,
-    },
   },
   tlt: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110010"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110010,
-    },
   },
   tlti: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01010,
-    },
+    format: ["000001", rs, "01010", int16],
+    display: [rs, int16],
   },
   tltiu: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01011,
-    },
+    format: ["000001", rs, "01011", uint16],
+    display: [rs, uint16],
   },
   tltu: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110011"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110011,
-    },
   },
   tne: {
-    format: "R",
+    format: ["000000", rs, rt, uint10, "110110"],
     display: [rs, rt],
-    known: {
-      [f]: 0b110110,
-    },
   },
   tnei: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01110,
-    },
+    format: ["000001", rs, "01110", int16],
+    display: [rs, int16],
+  },
+  "trunc.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001001"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "trunc.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
   },
   xor: {
-    format: "R",
+    format: ["000000", rs, rt, rd, "00000", "100110"],
     display: [rd, rs, rt],
-    known: {
-      [f]: 0b100110
-    },
   },
   xori: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001110
-    },
-  }
+    format: ["001110", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
 };

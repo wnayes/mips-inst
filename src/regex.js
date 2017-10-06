@@ -1,8 +1,10 @@
+import { isFmtString, isCondString } from "./regs";
+import { getImmFormatDetails } from "./immediates";
+
 const opRegex = "([A-Za-z0-3.]+)";
 const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
 const regRegex = "\\$?(\\w+)";
-const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
-const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
+const floatRegRegex = "\\$?[Ff]([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
@@ -11,18 +13,33 @@ const opcodeRegex = new RegExp("^\\s*" + opRegex);
 export function getOpcode(str) {
   const match = opcodeRegex.exec(str);
   if (match) {
-    const pieces = match[1].split("."); // Could be .cond.fmt
+    const pieces = match[1].split("."); // Could be .fmt, .cond.fmt, etc
     if (pieces.length === 1)
-      return pieces[0];
-    if (pieces.length === 2)
-      return pieces[0] + ".fmt";
-    if (pieces.length === 3)
-      return pieces[0] + ".cond.fmt";
+      return pieces[0].toLowerCase();
+
+    // Loop from the end, as the end has the .fmt for tricky things like .D.W
+    let result = "";
+    let foundFmt = false;
+    let foundCond = false;
+    for (let i = pieces.length - 1; i > 0; i--) {
+      let piece = pieces[i];
+      if (!foundFmt && isFmtString(piece)) {
+        foundFmt = true;
+        piece = "fmt";
+      }
+
+      if (!foundCond && isCondString(piece)) {
+        foundCond = true;
+        piece = "cond";
+      }
+
+      result = "." + piece + result;
+    }
+
+    return (pieces[0] + result).toLowerCase();
   }
   return null;
 }
-
-import { rs, rt, rd, fs, ft, fd, sa, imm } from "./opcodes.js";
 
 export function makeRegexForOpcode(opcodeObj) {
   const display = opcodeObj.display;
@@ -37,26 +54,18 @@ export function makeRegexForOpcode(opcodeObj) {
     if (optional)
       regexPart += "(?:";
 
-    if (isReg(part)) {
-      regexPart += regRegex;
-    }
-    else if (isFloatReg(part)) {
-      regexPart += floatRegRegex;
-    }
-    else if (part === sa) {
-      regexPart += immRegex;
-    }
-    else if (part === imm) {
-      if (isReg(display[i + 1])) {
-        regexPart += regIndRegex;
-        i++;
-      }
-      else {
-        regexPart += immRegex;
-      }
+    if (display[i + 1] === "(") {
+      if (optional)
+        throw new Error("Not prepared to generate optional regex with parenthesis");
+
+      if (display[i + 3] !== ")")
+        throw new Error("Not prepared to generate regex for multiple values in parenthesis"); // Or no closing paren
+
+      regexPart += makeParenthesisRegex(getRegexForPart(part), getRegexForPart(display[i + 2]));
+      i = i + 3;
     }
     else {
-      throw new Error(`Unrecognized display entry ${part}`);
+      regexPart += getRegexForPart(part);
     }
 
     if (optional)
@@ -82,14 +91,30 @@ export function makeRegexForOpcode(opcodeObj) {
   return new RegExp(regexStr);
 }
 
+function getRegexForPart(part) {
+  if (isReg(part))
+    return regRegex;
+  if (isFloatReg(part))
+    return floatRegRegex;
+
+  if (getImmFormatDetails(part))
+    return immRegex;
+
+  throw new Error(`Unrecognized display entry ${part}`);
+}
+
+function makeParenthesisRegex(regex1, regex2) {
+  return regex1 + "\\s*" + "\\(?" + regex2 + "\\)?";
+}
+
 export function isReg(entry) {
   if (!entry)
     return false;
 
   switch (entry.substr(0, 2)) {
-    case rs:
-    case rt:
-    case rd:
+    case "rs":
+    case "rt":
+    case "rd":
       return true;
   }
   return false;
@@ -100,9 +125,9 @@ export function isFloatReg(entry) {
     return false;
 
   switch (entry.substr(0, 2)) {
-    case fs:
-    case ft:
-    case fd:
+    case "fs":
+    case "ft":
+    case "fd":
       return true;
   }
   return false;

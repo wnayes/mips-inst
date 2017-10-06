@@ -78,1203 +78,17 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["e"] = getOpcodeDetails;
-/* harmony export (immutable) */ __webpack_exports__["b"] = findMatch;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(1);
-
-
-const op = "op";
-/* unused harmony export op */
-
-const rs = "rs";
-/* harmony export (immutable) */ __webpack_exports__["h"] = rs;
-
-const rt = "rt";
-/* harmony export (immutable) */ __webpack_exports__["i"] = rt;
-
-const rd = "rd";
-/* harmony export (immutable) */ __webpack_exports__["g"] = rd;
-
-const fs = "fs";
-/* harmony export (immutable) */ __webpack_exports__["c"] = fs;
-
-const ft = "ft";
-/* harmony export (immutable) */ __webpack_exports__["d"] = ft;
-
-const fd = "fd";
-/* harmony export (immutable) */ __webpack_exports__["a"] = fd;
-
-const sa = "sa";
-/* harmony export (immutable) */ __webpack_exports__["j"] = sa;
-
-const imm = "imm";
-/* harmony export (immutable) */ __webpack_exports__["f"] = imm;
-
-const f = "f";
-/* unused harmony export f */
-
-
-function getOpcodeDetails(opcode) {
-  return opcodeDetails[opcode.toLowerCase()];
-}
-
-// returns name
-function findMatch(inst) {
-  const op = inst >>> 26;
-
-  for (let opName in opcodeDetails) {
-    const opDetails = opcodeDetails[opName];
-    if ((opDetails.known["op"] || 0) === op) {
-      // For R, we must also match the function
-      if (opDetails.format === "R") {
-        const rs = (inst >>> 21) & 0x1F;
-        const rt = (inst >>> 16) & 0x1F;
-        const f = inst & 0x2F;
-
-        if ((opDetails.known["f"] || 0) !== f)
-          continue;
-
-        const knownRs = opDetails.known["rs"];
-        if (knownRs !== undefined && knownRs !== rs)
-          continue;
-
-        const knownRt = opDetails.known["rt"];
-        if (knownRt !== undefined && knownRt !== rt)
-          continue;
-      }
-      else if (opDetails.format === "FR") {
-        const f = inst & 0x2F;
-
-        // Function must also match
-        if ((opDetails.known["f"] || 0) !== f)
-          continue;
-
-        const ft = (inst >>> 16) & 0x1F;
-        const knownFt = opDetails.known["ft"];
-        if (knownFt !== undefined && knownFt !== ft)
-          continue;
-
-        // Format should be one of the allowed ones
-        let foundFmt = false;
-        const fmt = (inst >>> 21) & 0x1F;
-        for (let i = 0; i < opDetails.formats.length; i++) {
-          let format = opDetails.formats[i];
-          if (__WEBPACK_IMPORTED_MODULE_0__regs__["b" /* getFmtBits */](format) === fmt) {
-            foundFmt = true;
-            break;
-          }
-        }
-        if (!foundFmt)
-          continue;
-      }
-      else if (opDetails.format === "I") {
-        const rs = (inst >>> 21) & 0x1F;
-        const rt = (inst >>> 16) & 0x1F;
-
-        const knownRs = opDetails.known["rs"];
-        if (knownRs !== undefined && knownRs !== rs)
-          continue;
-
-        const knownRt = opDetails.known["rt"];
-        if (knownRt !== undefined && knownRt !== rt)
-          continue;
-      }
-
-      return opName;
-    }
-  }
-}
-
-const opcodeDetails = {
-  "abs.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b000101,
-      [ft]: 0b00000,
-    }
-  },
-  add: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100000
-    }
-  },
-  "add.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs, ft],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b000000,
-    }
-  },
-  addi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001000
-    }
-  },
-  addiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001001
-    },
-  },
-  addu: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100001
-    },
-  },
-  and: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100100
-    },
-  },
-  andi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001100
-    },
-  },
-  bc1f: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00000,
-    }
-  },
-  bc1fl: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00010,
-    }
-  },
-  bc1t: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00001,
-    }
-  },
-  bc1tl: {
-    format: "I",
-    display: [imm], // off
-    known: {
-      [op]: 0b010001,
-      [rs]: 0b01000,
-      [rt]: 0b00011,
-    }
-  },
-  beq: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b000100
-    },
-  },
-  beql: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b010100
-    },
-  },
-  bgez: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00001,
-    },
-  },
-  bgezal: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10001,
-    },
-  },
-  bgezall: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10011,
-    },
-  },
-  bgezl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00011,
-    },
-  },
-  bgtz: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000111,
-      [rt]: 0,
-    },
-  },
-  bgtzl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b010111,
-      [rt]: 0,
-    },
-  },
-  blez: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000110,
-      [rt]: 0,
-    },
-  },
-  blezl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b010110,
-      [rt]: 0,
-    },
-  },
-  bltz: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0,
-    },
-  },
-  bltzal: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10000,
-    },
-  },
-  bltzall: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b10010,
-    },
-  },
-  bltzl: {
-    format: "I",
-    display: [rs, imm], // off
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b00010,
-    },
-  },
-  bne: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b000101
-    },
-  },
-  bnel: {
-    format: "I",
-    display: [rs, rt, imm], // off
-    known: {
-      [op]: 0b010101
-    },
-  },
-  // break: {
-  //   format: "BREAK",
-  //   display: [],
-  //   known: {
-  //     break: 0b001101
-  //   },
-  // },
-  "ceil.l.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b001010,
-      [ft]: 0b00000,
-    }
-  },
-  "ceil.w.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b001110,
-      [ft]: 0b00000,
-    }
-  },
-  cfc1: { // TODO: fs is unusual
-    format: "R",
-    display: [rt, fs],
-    known: {
-      [op]: 0b010001,
-      [sa]: 0b00000,
-      [f]: 0b000000,
-      [rs]: 0b00010,
-    }
-  },
-  ctc1: { // TODO: fs is unusual
-    format: "R",
-    display: [rt, fs],
-    known: {
-      [op]: 0b010001,
-      [sa]: 0b00000,
-      [f]: 0b000000,
-      [rs]: 0b00110,
-    }
-  },
-  cop0: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010000
-    },
-  },
-  cop1: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010001
-    },
-  },
-  cop2: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010010
-    },
-  },
-  cop3: {
-    format: "J",
-    shift: false,
-    display: [imm], // cop_fun
-    known: {
-      [op]: 0b010011
-    },
-  },
-  "cvt.d.fmt": {
-    format: "FR",
-    formats: ["S", "W", "L"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100001,
-      [ft]: 0b00000,
-    }
-  },
-  "cvt.l.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100101,
-      [ft]: 0b00000,
-    }
-  },
-  "cvt.s.fmt": {
-    format: "FR",
-    formats: ["D", "W", "L"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100000,
-      [ft]: 0b00000,
-    }
-  },
-  "cvt.w.fmt": {
-    format: "FR",
-    formats: ["S", "D"],
-    display: [fd, fs],
-    known: {
-      [op]: 0b010001,
-      [f]: 0b100100,
-      [ft]: 0b00000,
-    }
-  },
-  dadd: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101100
-    },
-  },
-  daddi: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b011000
-    },
-  },
-  daddiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b011001
-    },
-  },
-  daddu: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101101
-    },
-  },
-  ddiv: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011110,
-      [rd]: 0,
-    },
-  },
-  ddivu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011111,
-      [rd]: 0,
-    },
-  },
-  div: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011010,
-      [rd]: 0,
-    },
-  },
-  divu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011011,
-      [rd]: 0,
-    },
-  },
-  dmult: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011100,
-      [rd]: 0,
-    },
-  },
-  dmultu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011101,
-      [rd]: 0,
-    },
-  },
-  dsll: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111000,
-      [rs]: 0,
-    },
-  },
-  dsll32: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111100,
-      [rs]: 0,
-    },
-  },
-  dsllv: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b010100,
-    },
-  },
-  dsra: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111011,
-      [rs]: 0,
-    },
-  },
-  dsra32: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111111,
-      [rs]: 0,
-    },
-  },
-  dsrav: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b010111,
-    },
-  },
-  dsrl: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111010,
-      [rs]: 0,
-    },
-  },
-  dsrl32: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b111110,
-      [rs]: 0,
-    },
-  },
-  dsrlv: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b010110,
-    },
-  },
-  dsub: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101110,
-    },
-  },
-  dsubu: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101111,
-    },
-  },
-  j: {
-    format: "J",
-    shift: true,
-    display: [imm],
-    known: {
-      [op]: 0b000010
-    },
-  },
-  jal: {
-    format: "J",
-    shift: true,
-    display: [imm],
-    known: {
-      [op]: 0b000011
-    },
-  },
-  jalr: {
-    format: "R",
-    display: ["rd?", rs],
-    known: {
-      [f]: 0b001001,
-      rt: 0,
-      rd: 31 // Implied unless specified
-    },
-  },
-  jr: {
-    format: "R",
-    display: [rs],
-    known: {
-      [f]: 0b001000,
-      rt: 0,
-      rd: 0
-    },
-  },
-  lb: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100000
-    },
-  },
-  lbu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100100
-    },
-  },
-  ld: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110111
-    },
-  },
-  ldc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b110101
-    },
-  },
-  ldc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110110
-    },
-  },
-  ldl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b011010
-    },
-  },
-  ldr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b011011
-    },
-  },
-  lh: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100001
-    },
-  },
-  lhu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100101
-    },
-  },
-  ll: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110000
-    },
-  },
-  lld: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110100
-    },
-  },
-  lui: {
-    format: "I",
-    display: [rt, imm],
-    known: {
-      [op]: 0b001111,
-      [rs]: 0,
-    },
-  },
-  lw: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100011
-    },
-  },
-  lwc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b110001
-    },
-  },
-  lwc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110010
-    },
-  },
-  lwc3: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b110011
-    },
-  },
-  lwl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100010
-    },
-  },
-  lwr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100110
-    },
-  },
-  lwu: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b100111
-    },
-  },
-  mfhi: {
-    format: "R",
-    display: [rd],
-    known: {
-      [f]: 0b010000,
-      [rs]: 0,
-      [rd]: 0,
-    },
-  },
-  mflo: {
-    format: "R",
-    display: [rd],
-    known: {
-      [f]: 0b010010,
-      [rs]: 0,
-      [rd]: 0,
-    },
-  },
-  movn: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b001011,
-    },
-  },
-  movz: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b001010,
-    },
-  },
-  mthi: {
-    format: "R",
-    display: [rs],
-    known: {
-      [f]: 0b010001,
-      [rt]: 0,
-      [rd]: 0,
-    },
-  },
-  mtlo: {
-    format: "R",
-    display: [rs],
-    known: {
-      [f]: 0b010011
-    },
-  },
-  mult: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011000,
-      [rd]: 0,
-    },
-  },
-  multu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b011001,
-      [rd]: 0,
-    },
-  },
-  // nop: {
-  //   format: "R",
-  //   display: [],
-  //   known: {
-  //   },
-  // },
-  nor: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100111
-    },
-  },
-  or: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100101
-    },
-  },
-  ori: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001101
-    },
-  },
-  pref: {
-    format: "I",
-    display: [rt, imm, rs], // hint, offset, base
-    known: {
-      [op]: 0b110011
-    },
-  },
-  sb: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101000
-    },
-  },
-  sc: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111000
-    },
-  },
-  scd: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111100
-    },
-  },
-  sd: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111111
-    },
-  },
-  sdc1: {
-    format: "I",
-    display: [ft, imm, rs], // off
-    known: {
-      [op]: 0b111101
-    },
-  },
-  sdc2: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b111110
-    },
-  },
-  sdl: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101100
-    },
-  },
-  sdr: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101101
-    },
-  },
-  sh: {
-    format: "I",
-    display: [rt, imm, rs], // off
-    known: {
-      [op]: 0b101001
-    },
-  },
-  sll: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0
-    },
-  },
-  sllv: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b000100
-    },
-  },
-  slt: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101010
-    },
-  },
-  slti: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001010
-    },
-  },
-  sltiu: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001011
-    },
-  },
-  sltu: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b101011
-    },
-  },
-  sra: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b000011
-    },
-  },
-  srav: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b000111
-    },
-  },
-  srl: {
-    format: "R",
-    display: [rd, rt, sa],
-    known: {
-      [f]: 0b000010
-    },
-  },
-  srlv: {
-    format: "R",
-    display: [rd, rt, rs],
-    known: {
-      [f]: 0b000110
-    },
-  },
-  sub: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100010
-    },
-  },
-  subu: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100011
-    },
-  },
-  sw: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101011
-    },
-  },
-  swc1: {
-    format: "I",
-    display: [ft, imm, rs],
-    known: {
-      [op]: 0b111001
-    },
-  },
-  swc2: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b111010
-    },
-  },
-  swc3: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b111011
-    },
-  },
-  swl: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101010
-    },
-  },
-  swr: {
-    format: "I",
-    display: [rt, imm, rs],
-    known: {
-      [op]: 0b101110
-    },
-  },
-  sync: {
-    format: "R",
-    display: [],
-    known: {
-      [f]: 0b001111,
-      [sa]: 0,
-      [rs]: 0,
-      [rt]: 0,
-      [rd]: 0,
-    },
-  },
-  // syscall: {
-  //   format: "SYSCALL",
-  //   display: [],
-  //   known: {
-  //     [f]: 0b001100,
-  //   },
-  // },
-  teq: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110100
-    },
-  },
-  teqi: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01100,
-    },
-  },
-  tge: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110000,
-    },
-  },
-  tgei: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01000,
-    },
-  },
-  tgeiu: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01001,
-    },
-  },
-  tgeu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110001,
-    },
-  },
-  tlt: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110010,
-    },
-  },
-  tlti: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01010,
-    },
-  },
-  tltiu: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01011,
-    },
-  },
-  tltu: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110011,
-    },
-  },
-  tne: {
-    format: "R",
-    display: [rs, rt],
-    known: {
-      [f]: 0b110110,
-    },
-  },
-  tnei: {
-    format: "I",
-    display: [rs, imm],
-    known: {
-      [op]: 0b000001,
-      [rt]: 0b01110,
-    },
-  },
-  xor: {
-    format: "R",
-    display: [rd, rs, rt],
-    known: {
-      [f]: 0b100110
-    },
-  },
-  xori: {
-    format: "I",
-    display: [rt, rs, imm],
-    known: {
-      [op]: 0b001110
-    },
-  }
-};
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["d"] = getRegBits;
-/* harmony export (immutable) */ __webpack_exports__["e"] = getRegName;
-/* harmony export (immutable) */ __webpack_exports__["a"] = getFloatRegName;
-/* harmony export (immutable) */ __webpack_exports__["b"] = getFmtBits;
-/* harmony export (immutable) */ __webpack_exports__["c"] = getFmtName;
+/* harmony export (immutable) */ __webpack_exports__["h"] = getRegBits;
+/* harmony export (immutable) */ __webpack_exports__["i"] = getRegName;
+/* harmony export (immutable) */ __webpack_exports__["c"] = getFloatRegName;
+/* harmony export (immutable) */ __webpack_exports__["f"] = getFmtBits;
+/* harmony export (immutable) */ __webpack_exports__["g"] = getFmtName;
+/* harmony export (immutable) */ __webpack_exports__["d"] = getFmt3Bits;
+/* harmony export (immutable) */ __webpack_exports__["e"] = getFmt3Name;
+/* harmony export (immutable) */ __webpack_exports__["k"] = isFmtString;
+/* harmony export (immutable) */ __webpack_exports__["a"] = getCondBits;
+/* harmony export (immutable) */ __webpack_exports__["b"] = getCondName;
+/* harmony export (immutable) */ __webpack_exports__["j"] = isCondString;
 const regs = {
   r0: 0,
   zero: 0,
@@ -1351,16 +165,75 @@ function getFmtName(bits) {
   return "";
 }
 
+const fmt3s = {
+  S: 0,
+  D: 1,
+  W: 4,
+  L: 5,
+};
+
+function getFmt3Bits(fmtStr) {
+  return fmt3s[fmtStr.toUpperCase()];
+}
+
+function getFmt3Name(bits) {
+  for (let name in fmt3s) {
+    if (fmt3s[name] === bits)
+      return name;
+  }
+  return "";
+}
+
+function isFmtString(fmtStr) {
+  return fmts.hasOwnProperty(fmtStr.toUpperCase()) || fmt3s.hasOwnProperty(fmtStr.toUpperCase());
+}
+
+const conds = {
+  F: 0,
+  UN: 1,
+  EQ: 2,
+  UEQ: 3,
+  OLT: 4,
+  ULT: 5,
+  OLE: 6,
+  ULE: 7,
+  SF: 8,
+  NGLE: 9,
+  SEQ: 10,
+  NGL: 11,
+  LT: 12,
+  NGE: 13,
+  LE: 14,
+  NGT: 15,
+};
+
+function getCondBits(condStr) {
+  return conds[condStr.toUpperCase()];
+}
+
+function getCondName(bits) {
+  for (let name in conds) {
+    if (conds[name] === bits)
+      return name;
+  }
+  return "";
+}
+
+function isCondString(condStr) {
+  return conds.hasOwnProperty(condStr.toUpperCase());
+}
+
 
 /***/ }),
-/* 2 */
+/* 1 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["c"] = parseImmediate;
-/* harmony export (immutable) */ __webpack_exports__["a"] = formatImmediate;
+/* unused harmony export formatImmediate */
 /* harmony export (immutable) */ __webpack_exports__["b"] = makeInt16;
-function parseImmediate(immArr, maxBits, signed) {
+/* harmony export (immutable) */ __webpack_exports__["a"] = getImmFormatDetails;
+function parseImmediate(immArr, maxBits, signed, shift) {
   let [neg, base, num] = immArr;
   base = base.toLowerCase();
 
@@ -1373,6 +246,10 @@ function parseImmediate(immArr, maxBits, signed) {
     value = parseInt(num, 16);
   else
     value = parseInt(num, 10);
+
+  if (shift) {
+    value >>>= shift;
+  }
 
   if (maxBits === 16) {
     if (signed) {
@@ -1398,125 +275,972 @@ function makeInt16(value) {
   return (new Int16Array([value]))[0];
 }
 
+function getImmFormatDetails(formatVal) {
+  if (formatVal.indexOf("int") === -1) {
+    if (formatVal.substr(0, 2) === "cc") {
+      return {
+        signed: false,
+        bits: 4,
+        shift: false,
+      };
+    }
+
+    return null; // Not an immediate
+  }
+
+  let shift = 0;
+  const shiftIndex = formatVal.indexOf("shift");
+  if (shiftIndex > 0)
+    shift = formatVal.substr(shiftIndex).match(/\d+/g);
+
+  return {
+    signed: formatVal[0] !== "u",
+    bits: parseInt(formatVal.match(/\d+/g)),
+    shift: shift,
+  };
+}
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["b"] = isBinaryLiteral;
+/* harmony export (immutable) */ __webpack_exports__["a"] = compareBits;
+/* harmony export (immutable) */ __webpack_exports__["d"] = makeBitMaskFromString;
+/* harmony export (immutable) */ __webpack_exports__["c"] = makeBitMask;
+/* harmony export (immutable) */ __webpack_exports__["e"] = padBitString;
+function isBinaryLiteral(str) {
+  return str[0] === "0" || str[0] === "1"; // Checking first char is enough for now
+}
+
+function compareBits(number, bitString, bitOffset) {
+  let shifted = (number >>> bitOffset) & makeBitMask(bitString.length);
+  let mask = makeBitMaskFromString(bitString);
+  return shifted === mask;
+}
+
+function makeBitMaskFromString(bitString) {
+  let mask = 0;
+  for (var i = 0; i < bitString.length; i++) {
+    let bit = bitString[i] === "1" ? 1 : 0;
+    mask <<= 1;
+    mask = mask | bit;
+  }
+  return mask;
+}
+
+function makeBitMask(len) {
+  if (len <= 0)
+    throw new Error(`makeBitMask cannot make mask of length ${len}`);
+
+  let mask = 1;
+  while (--len) {
+    mask <<= 1;
+    mask = mask | 1;
+  }
+  return mask;
+}
+
+function padBitString(str, minLen) {
+  while (str.length < minLen) {
+    str = "0" + str;
+  }
+  return str;
+}
+
+
 /***/ }),
 /* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = getOpcode;
-/* harmony export (immutable) */ __webpack_exports__["d"] = makeRegexForOpcode;
-/* harmony export (immutable) */ __webpack_exports__["c"] = isReg;
-/* harmony export (immutable) */ __webpack_exports__["b"] = isFloatReg;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes_js__ = __webpack_require__(0);
-const opRegex = "([A-Za-z0-3.]+)";
-const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
-const regRegex = "\\$?(\\w+)";
-const regIndRegex = immRegex + "\\s*" + "\\(?" + regRegex + "\\)?";
-const floatRegRegex = "\\$?[Ff]{1,2}([0-9]+)";
+/* harmony export (immutable) */ __webpack_exports__["b"] = getOpcodeDetails;
+/* harmony export (immutable) */ __webpack_exports__["c"] = getValueBitLength;
+/* harmony export (immutable) */ __webpack_exports__["a"] = findMatch;
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__bitstrings__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__immediates__ = __webpack_require__(1);
 
-const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
-// Gets the op string from a given entire instruction.
-// This is a general form (.fmt rather than .S, .D, etc.)
-function getOpcode(str) {
-  const match = opcodeRegex.exec(str);
-  if (match) {
-    const pieces = match[1].split("."); // Could be .cond.fmt
-    if (pieces.length === 1)
-      return pieces[0];
-    if (pieces.length === 2)
-      return pieces[0] + ".fmt";
-    if (pieces.length === 3)
-      return pieces[0] + ".cond.fmt";
-  }
-  return null;
+
+
+const rs = "rs";
+const rt = "rt";
+const rd = "rd";
+const fs = "fs";
+const ft = "ft";
+const fd = "fd";
+const fr = "fr";
+const sa = "uint5";
+const uint5 = "uint5";
+const uint10 = "uint10";
+const int16 = "int16";
+const uint16 = "uint16";
+const uint20 = "uint20";
+const uint26 = "uint26";
+const uint26shift2 = "uint26shift2";
+const cc = "cc";
+const cond = "cond";
+const fmt = "fmt";
+const fmt3 = "fmt3";
+
+function getOpcodeDetails(opcode) {
+  return opcodeDetails[opcode.toLowerCase()];
 }
 
+function getValueBitLength(str) {
+  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](str))
+    return str.length;
 
+  str = str.replace("?", "");
+  switch (str) {
+    case "cc":
+    case "fmt3":
+      return 3;
 
-function makeRegexForOpcode(opcodeObj) {
-  const display = opcodeObj.display;
+    case "cond":
+      return 4;
 
-  const parts = [opRegex];
+    case "rs":
+    case "rt":
+    case "rd":
+    case "fs":
+    case "ft":
+    case "fd":
+    case "fr":
+    case "sa":
+    case "fmt":
+      return 5;
+  }
 
-  for (let i = 0; i < display.length; i++) {
-    const part = display[i];
-    const optional = part.endsWith("?");
+  const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](str);
+  if (immDetails) {
+    return immDetails.bits;
+  }
 
-    let regexPart = "";
-    if (optional)
-      regexPart += "(?:";
+  throw new Error(`Unrecongized format value: ${str}`);
+}
 
-    if (isReg(part)) {
-      regexPart += regRegex;
+// returns name
+function findMatch(inst) {
+  let bestMatch = "";
+  let bestMatchScore = 0;
+  for (let opName in opcodeDetails) {
+    const format = opcodeDetails[opName].format;
+    const fmts = opcodeDetails[opName].fmts;
+    const score = formatMatches(inst, format, fmts);
+    if (score > bestMatchScore) {
+      bestMatch = opName;
+      bestMatchScore = score;
     }
-    else if (isFloatReg(part)) {
-      regexPart += floatRegRegex;
-    }
-    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["j" /* sa */]) {
-      regexPart += immRegex;
-    }
-    else if (part === __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["f" /* imm */]) {
-      if (isReg(display[i + 1])) {
-        regexPart += regIndRegex;
-        i++;
+  }
+
+  return bestMatch;
+}
+
+// Returns number of literal bits matched, if the overall format matches.
+function formatMatches(number, format, fmts) {
+  let score = 0;
+  let tempScore;
+  let bitOffset = 0;
+  for (let i = format.length - 1; i >= 0; i--) {
+    let bitLength;
+    let piece = format[i];
+    if (Array.isArray(piece)) {
+      let matchedOne = false;
+      for (let j = 0; j < piece.length; j++) {
+        tempScore = checkPiece(piece[j], number, bitOffset, fmts);
+        if (tempScore >= 0) {
+          matchedOne = true;
+          score += tempScore;
+          bitLength = getValueBitLength(piece[j]);
+          break; // j
+        }
       }
-      else {
-        regexPart += immRegex;
-      }
+      if (!matchedOne)
+        return 0;
     }
     else {
-      throw new Error(`Unrecognized display entry ${part}`);
+      tempScore = checkPiece(piece, number, bitOffset, fmts);
+      if (tempScore >= 0) {
+        score += tempScore;
+        bitLength = getValueBitLength(piece);
+      }
+      else {
+        return 0;
+      }
     }
 
-    if (optional)
-      regexPart += "[,\\s]+)?";
-
-    parts.push(regexPart);
+    bitOffset += bitLength;
   }
 
-  let regexStr =
-    "^\\s*" +
-    parts.reduce((str, next, index) => {
-      if (index === parts.length - 1)
-        return str + next;
-
-      // If it is an optional group, we already included the whitespace trailing.
-      if (!next.startsWith("(?:"))
-        return str + next + "[,\\s]+";
-
-      return str + next;
-    }, "") +
-    "\\s*$";
-
-  return new RegExp(regexStr);
+  return score;
 }
 
-function isReg(entry) {
-  if (!entry)
-    return false;
+function checkPiece(piece, number, bitOffset, fmts) {
+  if (!__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](piece)) {
+    if (piece === fmt) {
+      for (let i = 0; i < fmts.length; i++) {
+        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["f" /* getFmtBits */](fmts[i]).toString(2), 5);
+        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
+          return fmtBitString.length;
+      }
+      return -1;
+    }
 
-  switch (entry.substr(0, 2)) {
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["h" /* rs */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["i" /* rt */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["g" /* rd */]:
-      return true;
+    if (piece === fmt3) {
+      for (let i = 0; i < fmts.length; i++) {
+        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["d" /* getFmt3Bits */](fmts[i]).toString(2), 3);
+        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
+          return fmtBitString.length;
+      }
+      return -1;
+    }
+
+    return 0; // non-literal contributes nothing
   }
-  return false;
+
+  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, piece, bitOffset))
+    return piece.length;
+
+  return -1;
 }
 
-function isFloatReg(entry) {
-  if (!entry)
-    return false;
-
-  switch (entry.substr(0, 2)) {
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["c" /* fs */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["d" /* ft */]:
-    case __WEBPACK_IMPORTED_MODULE_0__opcodes_js__["a" /* fd */]:
-      return true;
-  }
-  return false;
-}
+const opcodeDetails = {
+  "abs.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  add: {
+    format: ["000000", rs, rt, rd, "00000100000"],
+    display: [rd, rs, rt],
+  },
+  "add.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000000"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
+  },
+  addi: {
+    format: ["001000", rs, rt, int16],
+    display: [rt, rs, int16],
+  },
+  addiu: {
+    format: ["001001", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+  addu: {
+    format: ["000000", rs, rt, rd, "00000100001"],
+    display: [rd, rs, rt],
+  },
+  and: {
+    format: ["000000", rs, rt, rd, "00000100100"],
+    display: [rd, rs, rt],
+  },
+  andi: {
+    format: ["001100", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+  bc1f: {
+    format: ["010001", "01000", [cc, "000"], "00", int16], // TODO shifting
+    display: ["cc?", int16], // offset
+  },
+  bc1fl: {
+    format: ["010001", "01000", [cc, "000"], "10", int16],
+    display: ["cc?", int16], // offset
+  },
+  bc1t: {
+    format: ["010001", "01000", [cc, "000"], "01", int16],
+    display: ["cc?", int16], // offset
+  },
+  bc1tl: {
+    format: ["010001", "01000", [cc, "000"], "11", int16],
+    display: ["cc?", int16], // offset
+  },
+  beq: {
+    format: ["000100", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
+  },
+  beql: {
+    format: ["010100", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
+  },
+  bgez: {
+    format: ["000001", rs, "00001", uint16],
+    display: [rs, uint16], // offset
+  },
+  bgezal: {
+    format: ["000001", rs, "10001", uint16],
+    display: [rs, uint16], // offset
+  },
+  bgezall: {
+    format: ["000001", rs, "10011", uint16],
+    display: [rs, uint16], // offset
+  },
+  bgezl: {
+    format: ["000001", rs, "00011", uint16],
+    display: [rs, uint16], // offset
+  },
+  bgtz: {
+    format: ["000111", rs, "00000", uint16],
+    display: [rs, uint16], // offset
+  },
+  bgtzl: {
+    format: ["010111", rs, "00000", uint16],
+    display: [rs, uint16], // offset
+  },
+  blez: {
+    format: ["000110", rs, "00000", uint16],
+    display: [rs, uint16], // offset
+  },
+  blezl: {
+    format: ["010110", rs, "00000", uint16],
+    display: [rs, uint16], // offset
+  },
+  bltz: {
+    format: ["000001", rs, "00000", uint16],
+    display: [rs, uint16], // offset
+  },
+  bltzal: {
+    format: ["000001", rs, "10000", uint16],
+    display: [rs, uint16], // offset
+  },
+  bltzall: {
+    format: ["000001", rs, "10010", uint16],
+    display: [rs, uint16], // offset
+  },
+  bltzl: {
+    format: ["000001", rs, "00010", uint16],
+    display: [rs, uint16], // offset
+  },
+  bne: {
+    format: ["000101", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
+  },
+  bnel: {
+    format: ["010101", rs, rt, uint16],
+    display: [rs, rt, uint16], // offset
+  },
+  break: {
+    format: ["000000", uint20, "001101"],
+    display: [],
+  },
+  "c.cond.fmt": {
+    format: ["010001", fmt, ft, fs, [cc, "000"], "00", "11", cond],
+    fmts: ["S", "D"],
+    display: ["cc?", fs, ft],
+  },
+  "ceil.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001010"], // TODO
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "ceil.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001110"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  cfc1: {
+    format: ["010001", "00010", rt, fs, "00000000000"],
+    display: [rt, fs],
+  },
+  ctc1: {
+    format: ["010001", "00110", rt, fs, "00000000000"],
+    display: [rt, fs],
+  },
+  cop0: {
+    format: ["010000", uint26],
+    display: [uint26], // cop_fun
+  },
+  cop1: {
+    format: ["010001", uint26],
+    display: [uint26], // cop_fun
+  },
+  cop2: {
+    format: ["010010", uint26],
+    display: [uint26], // cop_fun
+  },
+  cop3: {
+    format: ["010011", uint26],
+    display: [uint26], // cop_fun
+  },
+  "cvt.d.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "100001"],
+    fmts: ["S", "W", "L"],
+    display: [fd, fs],
+  },
+  "cvt.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "100101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "cvt.s.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "100000"],
+    fmts: ["D", "W", "L"],
+    display: [fd, fs],
+  },
+  "cvt.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "100100"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  dadd: {
+    format: ["000000", rs, rt, rd, "00000101100"],
+    display: [rd, rs, rt],
+  },
+  daddi: {
+    format: ["011000", rs, rt, int16],
+    display: [rt, rs, int16],
+  },
+  daddiu: {
+    format: ["011001", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+  daddu: {
+    format: ["000000", rs, rt, rd, "00000101101"],
+    display: [rd, rs, rt],
+  },
+  ddiv: {
+    format: ["000000", rs, rt, "0000000000011110"],
+    display: [rs, rt],
+  },
+  ddivu: {
+    format: ["000000", rs, rt, "0000000000011111"],
+    display: [rs, rt],
+  },
+  div: {
+    format: ["000000", rs, rt, "0000000000011010"],
+    display: [rs, rt],
+  },
+  "div.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000011"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
+  },
+  divu: {
+    format: ["000000", rs, rt, "0000000000011011"],
+    display: [rs, rt],
+  },
+  dmfc1: {
+    format: ["010001", "00001", rt, fs, "00000000000"],
+    display: [rt, fs],
+  },
+  dmult: {
+    format: ["000000", rs, rt, "0000000000011100"],
+    display: [rs, rt],
+  },
+  dmultu: {
+    format: ["000000", rs, rt, "0000000000011101"],
+    display: [rs, rt],
+  },
+  dmtc1: {
+    format: ["010001", "00101", rt, fs, "00000000000"],
+    display: [rt, fs],
+  },
+  dsll: {
+    format: ["00000000000", rt, rd, sa, "111000"],
+    display: [rd, rt, sa],
+  },
+  dsll32: {
+    format: ["00000000000", rt, rd, sa, "111100"],
+    display: [rd, rt, sa],
+  },
+  dsllv: {
+    format: ["000000", rs, rt, rd, "00000010100"],
+    display: [rd, rt, rs],
+  },
+  dsra: {
+    format: ["00000000000", rt, rd, sa, "111011"],
+    display: [rd, rt, sa],
+  },
+  dsra32: {
+    format: ["00000000000", rt, rd, sa, "111111"],
+    display: [rd, rt, sa],
+  },
+  dsrav: {
+    format: ["000000", rs, rt, rd, "00000010111"],
+    display: [rd, rt, rs],
+  },
+  dsrl: {
+    format: ["00000000000", rt, rd, sa, "111010"],
+    display: [rd, rt, sa],
+  },
+  dsrl32: {
+    format: ["00000000000", rt, rd, sa, "111110"],
+    display: [rd, rt, sa],
+  },
+  dsrlv: {
+    format: ["000000", rs, rt, rd, "00000010110"],
+    display: [rd, rt, rs],
+  },
+  dsub: {
+    format: ["000000", rs, rt, rd, "00000101110"],
+    display: [rd, rs, rt],
+  },
+  dsubu: {
+    format: ["000000", rs, rt, rd, "00000101111"],
+    display: [rd, rs, rt],
+  },
+  "floor.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001011"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "floor.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001111"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  j: {
+    format: ["000010", uint26shift2], // TODO
+    display: [uint26shift2],
+  },
+  jal: {
+    format: ["000011", uint26shift2],
+    display: [uint26shift2],
+  },
+  jalr: {
+    format: ["000000", rs, "00000", [rd, "11111"], "00000", "001001"],
+    display: ["rd?", rs],
+  },
+  jr: {
+    format: ["000000", rs, "000000000000000", "001000"],
+    display: [rs],
+  },
+  lb: {
+    format: ["100000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lbu: {
+    format: ["100100", rs, rt, uint16],
+    display: [rt, uint16, "(", rs, ")"], // offset
+  },
+  ld: {
+    format: ["110111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ldc1: {
+    format: ["110101", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
+  },
+  ldc2: {
+    format: ["110110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ldl: {
+    format: ["011010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ldr: {
+    format: ["011011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ldxc1: {
+    format: ["010011", rs, rt, "00000", fd, "000001"],
+    display: [fd, rt, "(", rs, ")"], // offset
+  },
+  lh: {
+    format: ["100001", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lhu: {
+    format: ["100101", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  ll: {
+    format: ["110000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lld: {
+    format: ["110100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lui: {
+    format: ["001111", "00000", rt, uint16],
+    display: [rt, uint16],
+  },
+  lw: {
+    format: ["100011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwc1: {
+    format: ["110001", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
+  },
+  lwc2: {
+    format: ["110010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwc3: {
+    format: ["110011" ,rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwl: {
+    format: ["100010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwr: {
+    format: ["100110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwu: {
+    format: ["100111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  lwxc1: {
+    format: ["010011", rs, rt, "00000", fd, "000000"],
+    display: [fd, rt, "(", rs, ")"],
+  },
+  "madd.fmt": {
+    format: ["010011", fr, ft, fs, fd, "100", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  mfc1: {
+    format: ["010001", "00000", rt, fs, "00000000000"],
+    display: [rt, fs],
+  },
+  mfhi: {
+    format: ["000000", "0000000000", rd, "00000", "010000"],
+    display: [rd],
+  },
+  mflo: {
+    format: ["000000", "0000000000", rd, "00000", "010010"],
+    display: [rd],
+  },
+  "mov.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000110"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  movf: {
+    format: ["000000", rs, cc, "00", rd, "00000", "000001"],
+    display: [rd, rs, cc],
+  },
+  "movf.fmt": {
+    format: ["010001", fmt, cc, "00", fs, fd, "010001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, cc],
+  },
+  movn: {
+    format: ["000000", rs, rt, rd, "00000", "001011"],
+    display: [rd, rs, rt],
+  },
+  "movn.fmt": {
+    format: ["010001", fmt, rt, fs, fd, "010011"],
+    fmts: ["S", "D"],
+    display: [fd, fs, rt],
+  },
+  movt: {
+    format: ["000000", rs, cc, "01", rd, "00000", "000001"],
+    display: [rd, rs, cc],
+  },
+  "movt.fmt": {
+    format: ["010001", fmt, cc, "01", fs, fd, "010001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, cc],
+  },
+  movz: {
+    format: ["000000", rs, rt, rd, "00000", "001010"],
+    display: [rd, rs, rt],
+  },
+  "movz.fmt": {
+    format: ["010001", fmt, rt, fs, fd, "010010"],
+    fmts: ["S", "D"],
+    display: [fd, fs, rt],
+  },
+  "msub.fmt": {
+    format: ["010011", fr, ft, fs, fd, "101", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  mtc1: {
+    format: ["010001", "00100", rt, fs, "00000000000"],
+    display: [ft, fs],
+  },
+  mthi: {
+    format: ["000000", rs, "000000000000000", "010001"],
+    display: [rs],
+  },
+  mtlo: {
+    format: ["000000", rs, "000000000000000", "010011"],
+    display: [rs],
+  },
+  "mul.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000010"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
+  },
+  mult: {
+    format: ["000000", rs, rt, "0000000000", "011000"],
+    display: [rs, rt],
+  },
+  multu: {
+    format: ["000000", rs, rt, "0000000000", "011001"],
+    display: [rs, rt],
+  },
+  "neg.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000111"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "nmadd.fmt": {
+    format: ["010011", fr, ft, fs, fd, "110", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  "nmsub.fmt": {
+    format: ["010011", fr, ft, fs, fd, "111", fmt3],
+    fmts: ["S", "D"],
+    display: [fd, fr, fs, ft],
+  },
+  nop: {
+    format: ["00000000000000000000000000000000"],
+    display: [],
+  },
+  nor: {
+    format: ["000000", rs, rt, rd, "00000", "100111"],
+    display: [rd, rs, rt],
+  },
+  or: {
+    format: ["000000", rs, rt, rd, "00000", "100101"],
+    display: [rd, rs, rt],
+  },
+  ori: {
+    format: ["001101", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+  pref: {
+    format: ["110011", rs, uint5, int16],
+    display: [uint5, int16, "(", rs, ")"], // hint, offset, base
+  },
+  prefx: {
+    format: ["010011", rs, rt, uint5, "00000", "001111"],
+    display: [uint5, rt, "(", rs, ")"], // hint, index, base
+  },
+  "recip.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "010101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "round.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001000"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "round.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001100"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "rsqrt.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "010110"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  sb: {
+    format: ["101000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sc: {
+    format: ["111000", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  scd: {
+    format: ["111100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sd: {
+    format: ["111111", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sdc1: {
+    format: ["111101", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"], // offset
+  },
+  sdc2: {
+    format: ["111110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sdl: {
+    format: ["101100", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sdr: {
+    format: ["101101", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sdxc1: {
+    format: ["010011", rs, uint5, fs, "00000", "001001"],
+    display: [fs, uint5, "(", rs, ")"],
+  },
+  sh: {
+    format: ["101001", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"], // offset
+  },
+  sll: {
+    format: ["000000", "00000", rt, rd, sa, "000000"],
+    display: [rd, rt, sa],
+  },
+  sllv: {
+    format: ["000000", rs, rt, rd, "00000", "000100"],
+    display: [rd, rt, rs],
+  },
+  slt: {
+    format: ["000000", rs, rt, rd, "00000", "101010"],
+    display: [rd, rs, rt],
+  },
+  slti: {
+    format: ["001010", rs, rt, int16],
+    display: [rt, rs, int16],
+  },
+  sltiu: {
+    format: ["001011", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+  sltu: {
+    format: ["000000", rs, rt, rd, "00000", "101011"],
+    display: [rd, rs, rt],
+  },
+  "sqrt.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "000100"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  sra: {
+    format: ["000000", "00000", rt, rd, sa, "000011"],
+    display: [rd, rt, sa],
+  },
+  srav: {
+    format: ["000000", rs, rt, rd, "00000", "000111"],
+    display: [rd, rt, rs],
+  },
+  srl: {
+    format: ["000000", "00000", rt, rd, sa, "000010"],
+    display: [rd, rt, sa],
+  },
+  srlv: {
+    format: ["000000", rs, rt, rd, "00000", "000110"],
+    display: [rd, rt, rs],
+  },
+  sub: {
+    format: ["000000", rs, rt, rd, "00000", "100010"],
+    display: [rd, rs, rt],
+  },
+  "sub.fmt": {
+    format: ["010001", fmt, ft, fs, fd, "000001"],
+    fmts: ["S", "D"],
+    display: [fd, fs, ft],
+  },
+  subu: {
+    format: ["000000", rs, rt, rd, "00000", "100011"],
+    display: [rd, rs, rt],
+  },
+  sw: {
+    format: ["101011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swc1: {
+    format: ["111001", rs, ft, int16],
+    display: [ft, int16, "(", rs, ")"],
+  },
+  swc2: {
+    format: ["111010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swc3: {
+    format: ["111011", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swl: {
+    format: ["101010", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swr: {
+    format: ["101110", rs, rt, int16],
+    display: [rt, int16, "(", rs, ")"],
+  },
+  swxc1: {
+    format: ["010011", rs, uint5, fs, "00000", "001000"],
+    display: [fs, uint5, "(", rs, ")"],
+  },
+  sync: {
+    format: ["000000", "000000000000000", "00000", "001111"],
+    display: [],
+  },
+  syscall: {
+    format: ["000000", uint20, "001100"],
+    display: [],
+  },
+  teq: {
+    format: ["000000", rs, rt, uint10, "110100"],
+    display: [rs, rt],
+  },
+  teqi: {
+    format: ["000001", rs, "01100", int16],
+    display: [rs, int16],
+  },
+  tge: {
+    format: ["000000", rs, rt, uint10, "110000"],
+    display: [rs, rt],
+  },
+  tgei: {
+    format: ["000001", rs, "01000", int16],
+    display: [rs, int16],
+  },
+  tgeiu: {
+    format: ["000001", rs, "01001", uint16],
+    display: [rs, uint16],
+  },
+  tgeu: {
+    format: ["000000", rs, rt, uint10, "110001"],
+    display: [rs, rt],
+  },
+  tlt: {
+    format: ["000000", rs, rt, uint10, "110010"],
+    display: [rs, rt],
+  },
+  tlti: {
+    format: ["000001", rs, "01010", int16],
+    display: [rs, int16],
+  },
+  tltiu: {
+    format: ["000001", rs, "01011", uint16],
+    display: [rs, uint16],
+  },
+  tltu: {
+    format: ["000000", rs, rt, uint10, "110011"],
+    display: [rs, rt],
+  },
+  tne: {
+    format: ["000000", rs, rt, uint10, "110110"],
+    display: [rs, rt],
+  },
+  tnei: {
+    format: ["000001", rs, "01110", int16],
+    display: [rs, int16],
+  },
+  "trunc.l.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001001"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  "trunc.w.fmt": {
+    format: ["010001", fmt, "00000", fs, fd, "001101"],
+    fmts: ["S", "D"],
+    display: [fd, fs],
+  },
+  xor: {
+    format: ["000000", rs, rt, rd, "00000", "100110"],
+    display: [rd, rs, rt],
+  },
+  xori: {
+    format: ["001110", rs, rt, uint16],
+    display: [rt, rs, uint16],
+  },
+};
 
 
 /***/ }),
@@ -1527,7 +1251,7 @@ function isFloatReg(entry) {
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__parse__ = __webpack_require__(5);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "parse", function() { return __WEBPACK_IMPORTED_MODULE_0__parse__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__print__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__print__ = __webpack_require__(7);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "print", function() { return __WEBPACK_IMPORTED_MODULE_1__print__["a"]; });
 
 
@@ -1540,10 +1264,12 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 "use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = parse;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__regex__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__regex__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__bitstrings__ = __webpack_require__(2);
+
 
 
 
@@ -1569,197 +1295,315 @@ function _parse(value) {
   if (!opcode)
     throw `Could not parse opcode from ${value}`;
 
-  // TODO: Generalize
-  const specialCode = parseSpecialOp(opcode);
-  if (specialCode !== undefined)
-    return specialCode;
-
-  let opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["e" /* getOpcodeDetails */](opcode);
+  let opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
   if (!opcodeObj) {
     throw `Opcode ${opcode} was not recognized`;
   }
 
-  let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["d" /* makeRegexForOpcode */](opcodeObj);
+  let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["b" /* makeRegexForOpcode */](opcodeObj);
   let match = regex.exec(value);
   if (!match)
     throw `Could not parse instruction: ${value}`;
 
-  const opcodeFormat = opcodeObj.format;
+  let values = {};
 
-  let op, rs, rt, rd, fs, ft, fd, sa, fmt, imm, f;
-  op = opcodeObj.known["op"] || 0;
-  rs = opcodeObj.known["rs"] || 0;
-  rt = opcodeObj.known["rt"] || 0;
-  rd = opcodeObj.known["rd"] || 0;
-  fs = opcodeObj.known["fs"] || 0;
-  ft = opcodeObj.known["ft"] || 0;
-  fd = opcodeObj.known["fd"] || 0;
-  sa = opcodeObj.known["sa"] || 0;
-  imm = opcodeObj.known["imm"] || 0;
-  f = opcodeObj.known["f"] || 0;
-
-  if (opcodeFormat === "FR") {
-    if (opcodeObj.known.hasOwnProperty("fmt"))
-      fmt = opcodeObj.known["fmt"];
-    else
-      fmt = determineFmt(match[1], opcodeObj.formats);
+  if (opcode.indexOf(".fmt") !== -1 || opcode.indexOf(".cond") !== -1) {
+    determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);
   }
 
   const display = opcodeObj.display;
   let matchIndex = 2; // 0 is whole match, 1 is opcode - skip both
   for (let i = 0; i < display.length; i++, matchIndex++) {
     const parsedVal = match[matchIndex];
-    const displayEntry = display[i];
+    let displayEntry = display[i];
+
+    const optional = displayEntry.endsWith("?");
+    displayEntry = displayEntry.replace("?", "");
+
     switch (displayEntry) {
+      case "(":
+      case ")":
+        matchIndex--; // Eh
+        continue;
+
       case "rs":
-        rs = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
-        if (rs === undefined)
-          throw new Error(`Unrecognized rs register ${parsedVal}`);
-        break;
-
-      case "rt":
-        rt = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
-        if (rt === undefined)
-          throw new Error(`Unrecognized rt register ${parsedVal}`);
-        break;
-
       case "rd":
-      case "rd?": {
-        const tryRd = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getRegBits */](parsedVal);
-        if (tryRd === undefined) {
-          if (displayEntry === "rd?")
-            break;
+      case "rt": {
+        const tryReg = __WEBPACK_IMPORTED_MODULE_2__regs__["h" /* getRegBits */](parsedVal);
+        if (tryReg === undefined) {
+          if (optional)
+            continue;
 
-          throw new Error(`Unrecognized rd register ${parsedVal}`);
+          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
         }
-        rd = tryRd;
-        break;
+        values[displayEntry] = tryReg;
+        continue;
       }
 
       case "fs":
-        fs = parseInt(parsedVal);
-        if (isNaN(fs))
-          throw new Error(`Unrecognized fs register ${parsedVal}`);
-        break;
-
       case "ft":
-        ft = parseInt(parsedVal);
-        if (isNaN(ft))
-          throw new Error(`Unrecognized ft register ${parsedVal}`);
-        break;
-
       case "fd":
-        fd = parseInt(parsedVal);
-        if (isNaN(fd))
-          throw new Error(`Unrecognized fd register ${parsedVal}`);
-        break;
-
-      case "sa":
-      case "imm": {
-        let value;
-        const immPieces = [match[i + 2], match[i + 3], match[i + 4]];
-        if (opcodeFormat === "I" || opcodeFormat === "R") {
-          value = __WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */](immPieces, 16, true);
-        }
-        else if (opcodeFormat === "J") {
-          value = __WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */](immPieces, 32);
-        }
-        else {
-          throw `Immediate in invalid opcode format ${opcodeFormat}`;
-        }
-
-        if (displayEntry === "imm")
-          imm = value;
-        else if (displayEntry === "sa")
-          sa = value;
-
-        matchIndex += 2;
-        break;
-      }
-      default:
-        throw `Unrecognized opcode display entry ${displayEntry}`;
+      case "fr":
+        values[displayEntry] = parseInt(parsedVal);
+        if (isNaN(values[displayEntry]))
+          throw new Error(`Unrecognized ${displayEntry} register ${parsedVal}`);
+        continue;
     }
+
+    const immDetails = __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](displayEntry);
+    if (immDetails) {
+      let value;
+      const immPieces = [match[matchIndex], match[matchIndex + 1], match[matchIndex + 2]];
+
+      if (!optional || immPieces[2]) {
+        value = __WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */](immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
+        values[displayEntry] = value;
+      }
+
+      matchIndex += 2;
+
+      continue;
+    }
+
+    throw `Unrecognized opcode display entry ${displayEntry}`;
   }
 
-  switch (opcodeFormat) {
-    case "R":
-      return _buildRFormat(op, rs || fs, rt || ft, rd || fd, sa, f);
-    case "I":
-      return _buildIFormat(op, rs || fs, rt || ft, imm);
-    case "J":
-      return _buildJFormat(op, imm, opcodeObj.shift);
-    case "FR":
-      return _buildFRFormat(op, fmt, fs, ft, fd, f);
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
+  return bitsFromFormat(opcodeObj.format, values);
+}
+
+function bitsFromFormat(format, values) {
+  let output = 0;
+  let bitOffset = 0;
+  for (let i = 0; i < format.length; i++) {
+    let writeResult;
+    let piece = format[i];
+    let bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](Array.isArray(piece) ? piece[0] : piece);
+    output = (output << bitLength) >>> 0;
+    if (Array.isArray(piece)) {
+      for (let j = 0; j < piece.length; j++) {
+        writeResult = writeBitsForPiece(piece[j], output, values);
+        if (writeResult.wrote) {
+          output = writeResult.output;
+          break; // j
+        }
+      }
+    }
+    else {
+      writeResult = writeBitsForPiece(piece, output, values);
+      if (writeResult.wrote) {
+        output = writeResult.output;
+      }
+    }
+
+    bitOffset += bitLength;
+  }
+
+  if (bitOffset != 32)
+    throw new Error("Incorrect number of bits written for format " + format);
+
+  return output;
+}
+
+function writeBitsForPiece(piece, output, values) {
+  let wrote = false;
+  if (__WEBPACK_IMPORTED_MODULE_4__bitstrings__["b" /* isBinaryLiteral */](piece)) {
+    output |= __WEBPACK_IMPORTED_MODULE_4__bitstrings__["d" /* makeBitMaskFromString */](piece);
+    wrote = true;
+  }
+  else if (values[piece] !== undefined) {
+    let value = values[piece] & __WEBPACK_IMPORTED_MODULE_4__bitstrings__["c" /* makeBitMask */](__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece));
+    wrote = true;
+    output |= value;
+  }
+
+  return {
+    wrote: wrote,
+    output: output >>> 0,
+  };
+}
+
+function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, format, values) {
+  const givenPieces = givenOpcode.split(".");
+  const genericPieces = genericOpcode.split(".");
+  if (givenPieces.length !== genericPieces.length)
+    throw `Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`;
+
+  for (let i = 0; i < genericPieces.length; i++) {
+    const genericPiece = genericPieces[i];
+
+    if (genericPiece === "fmt" || genericPiece === "ftm3") {
+      if (allowedFormats.indexOf(givenPieces[i]) === -1)
+        throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;
+
+      if (genericPiece === "fmt")
+        values["fmt"] = __WEBPACK_IMPORTED_MODULE_2__regs__["f" /* getFmtBits */](givenPieces[i]);
+      else if (genericPiece === "fmt3")
+        values["fmt3"] = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getFmt3Bits */](givenPieces[i]);
+    }
+
+    if (genericPiece === "cond")
+      values["cond"] = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getCondBits */](givenPieces[i]);
   }
 }
 
-function _buildRFormat(op, rs, rt, rd, sa, f) {
-  let asm = (op << 26);
-  asm |= (rs << 21);
-  asm |= (rt << 16);
-  asm |= (rd << 11);
-  asm |= (sa << 6);
-  asm |= f;
-  return asm >>> 0;
-}
-
-function _buildIFormat(op, rs, rt, imm) {
-  let asm = (op << 26);
-  asm |= (rs << 21);
-  asm |= (rt << 16);
-  asm |= __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* formatImmediate */](imm, 16);
-  return asm >>> 0;
-}
-
-function _buildJFormat(op, imm, shift) {
-  let asm = (op << 26);
-  asm |= (shift ? imm >>> 2 : imm) & 0x03FFFFFF;
-  return asm >>> 0;
-}
-
-function _buildFRFormat(op, fmt, fs, ft, fd, f) {
-  let asm = (op << 26);
-  asm |= (fmt << 21);
-  asm |= (ft << 16);
-  asm |= (fs << 11);
-  asm |= (fd << 6);
-  asm |= f;
-  return asm >>> 0;
-}
-
-function parseSpecialOp(opcode) {
-  if (opcode.toLowerCase() === "nop")
-    return 0;
-  if (opcode.toLowerCase() === "break")
-    return 0x0000000D;
-  if (opcode.toLowerCase() === "syscall")
-    return 0x0000000C;
-}
-
-function determineFmt(opcode, allowedFormats) {
-  const pieces = opcode.split(".");
-  if (!pieces.length)
-    throw `No format specified for opcode ${opcode}`;
-
-  const fmtStr = pieces[pieces.length - 1];
-  if (allowedFormats.indexOf(fmtStr) === -1)
-    throw `Format ${fmtStr} is not allowed for ${pieces[0]}. Allowed values are ${allowedFormats}`;
-
-  return __WEBPACK_IMPORTED_MODULE_2__regs__["b" /* getFmtBits */](fmtStr);
-}
 
 /***/ }),
 /* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["a"] = getOpcode;
+/* harmony export (immutable) */ __webpack_exports__["b"] = makeRegexForOpcode;
+/* unused harmony export isReg */
+/* unused harmony export isFloatReg */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__regs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__immediates__ = __webpack_require__(1);
+
+
+
+const opRegex = "([A-Za-z0-3.]+)";
+const immRegex = "(-)?0?([xbo]?)([A-Fa-f0-9]+)";
+const regRegex = "\\$?(\\w+)";
+const floatRegRegex = "\\$?[Ff]([0-9]+)";
+
+const opcodeRegex = new RegExp("^\\s*" + opRegex);
+
+// Gets the op string from a given entire instruction.
+// This is a general form (.fmt rather than .S, .D, etc.)
+function getOpcode(str) {
+  const match = opcodeRegex.exec(str);
+  if (match) {
+    const pieces = match[1].split("."); // Could be .fmt, .cond.fmt, etc
+    if (pieces.length === 1)
+      return pieces[0].toLowerCase();
+
+    // Loop from the end, as the end has the .fmt for tricky things like .D.W
+    let result = "";
+    let foundFmt = false;
+    let foundCond = false;
+    for (let i = pieces.length - 1; i > 0; i--) {
+      let piece = pieces[i];
+      if (!foundFmt && __WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */](piece)) {
+        foundFmt = true;
+        piece = "fmt";
+      }
+
+      if (!foundCond && __WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */](piece)) {
+        foundCond = true;
+        piece = "cond";
+      }
+
+      result = "." + piece + result;
+    }
+
+    return (pieces[0] + result).toLowerCase();
+  }
+  return null;
+}
+
+function makeRegexForOpcode(opcodeObj) {
+  const display = opcodeObj.display;
+
+  const parts = [opRegex];
+
+  for (let i = 0; i < display.length; i++) {
+    const part = display[i];
+    const optional = part.endsWith("?");
+
+    let regexPart = "";
+    if (optional)
+      regexPart += "(?:";
+
+    if (display[i + 1] === "(") {
+      if (optional)
+        throw new Error("Not prepared to generate optional regex with parenthesis");
+
+      if (display[i + 3] !== ")")
+        throw new Error("Not prepared to generate regex for multiple values in parenthesis"); // Or no closing paren
+
+      regexPart += makeParenthesisRegex(getRegexForPart(part), getRegexForPart(display[i + 2]));
+      i = i + 3;
+    }
+    else {
+      regexPart += getRegexForPart(part);
+    }
+
+    if (optional)
+      regexPart += "[,\\s]+)?";
+
+    parts.push(regexPart);
+  }
+
+  let regexStr =
+    "^\\s*" +
+    parts.reduce((str, next, index) => {
+      if (index === parts.length - 1)
+        return str + next;
+
+      // If it is an optional group, we already included the whitespace trailing.
+      if (!next.startsWith("(?:"))
+        return str + next + "[,\\s]+";
+
+      return str + next;
+    }, "") +
+    "\\s*$";
+
+  return new RegExp(regexStr);
+}
+
+function getRegexForPart(part) {
+  if (isReg(part))
+    return regRegex;
+  if (isFloatReg(part))
+    return floatRegRegex;
+
+  if (__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](part))
+    return immRegex;
+
+  throw new Error(`Unrecognized display entry ${part}`);
+}
+
+function makeParenthesisRegex(regex1, regex2) {
+  return regex1 + "\\s*" + "\\(?" + regex2 + "\\)?";
+}
+
+function isReg(entry) {
+  if (!entry)
+    return false;
+
+  switch (entry.substr(0, 2)) {
+    case "rs":
+    case "rt":
+    case "rd":
+      return true;
+  }
+  return false;
+}
+
+function isFloatReg(entry) {
+  if (!entry)
+    return false;
+
+  switch (entry.substr(0, 2)) {
+    case "fs":
+    case "ft":
+    case "fd":
+      return true;
+  }
+  return false;
+}
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (immutable) */ __webpack_exports__["a"] = print;
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__regex__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__regs__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__immediates__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__opcodes__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__regs__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__immediates__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__bitstrings__ = __webpack_require__(2);
 
 
 
@@ -1795,76 +1639,75 @@ function _print(inst, opts) {
   if (typeof inst !== "number")
     throw new Error("Unexpected array entry. Pass all numbers.");
 
-  const specialStr = _printSpecialInst(inst, opts);
-  if (specialStr)
-    return specialStr;
-
-  const opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* findMatch */](inst);
+  const opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
   if (!opName)
     throw new Error("Unrecognized instruction");
 
-  const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["e" /* getOpcodeDetails */](opName);
+  const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
 
-  let [rs, rt, rd, fs, ft, fd, sa, fmt, imm] = _extractValues(inst, opcodeObj);
+  let values = _extractValues(inst, opcodeObj.format);
 
-  let result = _formatOpcode(opName, fmt, opts);
+  let result = _formatOpcode(opName, values, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
       case "rs":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rs);
       case "rt":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rt);
       case "rd":
-      case "rd?":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["e" /* getRegName */](rd);
+        return __WEBPACK_IMPORTED_MODULE_1__regs__["i" /* getRegName */](values[displayEntry]);
 
       case "fs":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](fs || rs || 0);
       case "ft":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](ft || rt || 0);
       case "fd":
-        return __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getFloatRegName */](fd || rd || 0);
+        return __WEBPACK_IMPORTED_MODULE_1__regs__["c" /* getFloatRegName */](values[displayEntry]);
     }
   }
 
   const display = opcodeObj.display;
   for (let i = 0; i < display.length; i++) {
-    switch (display[i]) {
+    let displayEntry = display[i];
+
+    if (displayEntry.endsWith("?")) {
+      displayEntry = displayEntry.replace("?", "");
+      if (values[displayEntry] === undefined)
+        continue; // Optional value, not set.
+    }
+
+    let value = values[displayEntry];
+
+    let addComma = opts.commas;
+
+    switch (displayEntry) {
       case "rs":
       case "rt":
       case "rd":
       case "fs":
       case "ft":
       case "fd":
-        result += " " + _formatReg(_getRegName(display[i]), opts);
+        if (!result.endsWith("("))
+          result += " ";
+        result += _formatReg(_getRegName(displayEntry), opts);
         break;
 
-      case "rd?":
-        if (rd !== opcodeObj.known["rd"])
-          result += " " + _formatReg(_getRegName(display[i]), opts);
-        break;
+      case "(":
+      case ")":
+        addComma = false;
+        if (result.endsWith(","))
+          result = result.slice(0, -1); // Lop off comma, since we are involved in a parenthesis open/close
 
-      case "sa":
-        result += " " + _formatNumber(sa, opts);
-        break;
-
-      case "imm":
-        if (__WEBPACK_IMPORTED_MODULE_1__regex__["c" /* isReg */](display[i + 1]) || __WEBPACK_IMPORTED_MODULE_1__regex__["b" /* isFloatReg */](display[i + 1])) {
-          result += " " + _formatNumber(imm, opts)
-            + "("
-            + _formatReg(_getRegName(display[i + 1]), opts)
-            + ")";
-          i++; // Handled next reg
-        }
-        else {
-          result += " " + _formatNumber(imm, opts);
-        }
-
+        result += displayEntry;
         break;
     }
 
-    if (opts.commas && (i !== display.length - 1)) {
+    const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](displayEntry);
+    if (immDetails) {
+      if (!result.endsWith("("))
+        result += " ";
+
+      result += _formatNumber(value, opts);
+    }
+
+    if (addComma && (i !== display.length - 1) && !result.endsWith(",")) {
       result += ",";
     }
   }
@@ -1872,67 +1715,59 @@ function _print(inst, opts) {
   return result.trim();
 }
 
-function _extractValues(inst, opcodeObj) {
-  let rs, rt, rd, fs, ft, fd, sa, fmt, imm;
-  const opcodeFormat = opcodeObj.format;
-  switch (opcodeFormat) {
-    case "R":
-      [rs, rt, rd, sa] = _extractRFormat(inst);
-      break;
+function _extractValues(inst, format) {
+  let values = {};
+  for (let i = format.length - 1; i >= 0; i--) {
+    let value, bitLength;
+    let piece = format[i];
+    if (Array.isArray(piece)) {
+      for (let j = piece.length - 1; j >= 0; j--) {
+        bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece[j]);
+        value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
 
-    case "I":
-      [rs, rt, imm] = _extractIFormat(inst);
-      break;
+        if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece[j])) {
+          if (piece[j] === __WEBPACK_IMPORTED_MODULE_3__bitstrings__["e" /* padBitString */](value.toString(2), bitLength)) {
+            piece = piece[j];
+            break;
+          }
+        }
+        else {
+          piece = piece[j];
+          break;
+        }
+      }
+    }
+    else {
+      bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece);
+      value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
+    }
 
-    case "J":
-      [imm] = _extractJFormat(inst, opcodeObj.shift);
-      break;
+    if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece)) {
+      inst >>>= bitLength;
+      continue;
+    }
 
-    case "FR":
-      [fmt, ft, fs, fd] = _extractFRFormat(inst);
-      break;
+    values[piece] = value;
 
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
+    const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](piece);
+    if (immDetails) {
+      if (immDetails.signed && immDetails.bits === 16) {
+        values[piece] = __WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */](values[piece]);
+      }
+
+      if (immDetails.shift) {
+        values[piece] = values[piece] << immDetails.shift;
+      }
+    }
+
+    inst >>>= bitLength;
   }
 
-  return [rs, rt, rd, fs, ft, fd, sa, fmt, imm];
-}
-
-function _extractRFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // rs
-    (inst >>> 16) & 0x1F, // rt
-    (inst >>> 11) & 0x1F, // rd
-    (inst >>> 6) & 0x1F, // sa
-  ];
-}
-
-function _extractIFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // rs
-    (inst >>> 16) & 0x1F, // rt
-    __WEBPACK_IMPORTED_MODULE_3__immediates__["b" /* makeInt16 */](inst & 0xFFFF) // imm
-  ];
-}
-
-function _extractJFormat(inst, shift) {
-  return [
-    (inst & 0x03FFFFFF) << (shift ? 2 : 0)
-  ];
-}
-
-function _extractFRFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // fmt
-    (inst >>> 16) & 0x1F, // ft
-    (inst >>> 11) & 0x1F, // fs
-    (inst >>> 6) & 0x1F, // fd
-  ];
+  return values;
 }
 
 function _formatNumber(num, opts) {
-  if (!num)
+  if (num === 0)
     return num.toString(opts.numBase);
 
   let value = "";
@@ -1958,11 +1793,26 @@ function _formatReg(regStr, opts) {
   return value;
 }
 
-function _formatOpcode(opcodeName, fmt, opts) {
+function _formatOpcode(opcodeName, values, opts) {
   const pieces = opcodeName.split(".");
-  let opcode = pieces[0];
-  if (pieces.indexOf("fmt") !== -1)
-    opcode += "." + __WEBPACK_IMPORTED_MODULE_2__regs__["c" /* getFmtName */](fmt);
+  for (let i = 0; i < pieces.length; i++) {
+    if (pieces[i] === "fmt") {
+      if (values.hasOwnProperty("fmt3"))
+        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["e" /* getFmt3Name */](values["fmt3"]);
+      else if (values.hasOwnProperty("fmt"))
+        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["g" /* getFmtName */](values["fmt"]);
+      else
+        throw new Error("Format value not available");
+    }
+    else if (pieces[i] === "cond") {
+      if (values.hasOwnProperty("cond"))
+        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["b" /* getCondName */](values["cond"]);
+      else
+        throw new Error("Condition value not available");
+    }
+  }
+  let opcode = pieces.join(".");
+
   return _applyCasing(opcode, opts.casing);
 }
 
@@ -1975,15 +1825,6 @@ function _applyCasing(value, casing) {
     default:
       return value.toUpperCase();
   }
-}
-
-function _printSpecialInst(inst, opts) {
-  if (inst === 0)
-    return _formatOpcode("NOP", undefined, opts);
-  if (inst === 0x0000000D)
-    return _formatOpcode("BREAK", undefined, opts);
-  if (inst === 0x0000000C)
-    return _formatOpcode("SYSCALL", undefined, opts);
 }
 
 

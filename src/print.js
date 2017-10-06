@@ -1,7 +1,7 @@
-import { findMatch, getOpcodeDetails } from "./opcodes";
-import { isReg, isFloatReg } from "./regex";
-import { getRegName, getFloatRegName, getFmtName } from "./regs";
-import { makeInt16 } from "./immediates";
+import { findMatch, getOpcodeDetails, getValueBitLength } from "./opcodes";
+import { getRegName, getFloatRegName, getFmtName, getFmt3Name, getCondName } from "./regs";
+import { makeInt16, getImmFormatDetails } from "./immediates";
+import { isBinaryLiteral, makeBitMask, padBitString } from "./bitstrings";
 
 // opts:
 //   commas: true to separate values by commas
@@ -33,76 +33,75 @@ function _print(inst, opts) {
   if (typeof inst !== "number")
     throw new Error("Unexpected array entry. Pass all numbers.");
 
-  const specialStr = _printSpecialInst(inst, opts);
-  if (specialStr)
-    return specialStr;
-
   const opName = findMatch(inst);
   if (!opName)
     throw new Error("Unrecognized instruction");
 
   const opcodeObj = getOpcodeDetails(opName);
 
-  let [rs, rt, rd, fs, ft, fd, sa, fmt, imm] = _extractValues(inst, opcodeObj);
+  let values = _extractValues(inst, opcodeObj.format);
 
-  let result = _formatOpcode(opName, fmt, opts);
+  let result = _formatOpcode(opName, values, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
       case "rs":
-        return getRegName(rs);
       case "rt":
-        return getRegName(rt);
       case "rd":
-      case "rd?":
-        return getRegName(rd);
+        return getRegName(values[displayEntry]);
 
       case "fs":
-        return getFloatRegName(fs || rs || 0);
       case "ft":
-        return getFloatRegName(ft || rt || 0);
       case "fd":
-        return getFloatRegName(fd || rd || 0);
+        return getFloatRegName(values[displayEntry]);
     }
   }
 
   const display = opcodeObj.display;
   for (let i = 0; i < display.length; i++) {
-    switch (display[i]) {
+    let displayEntry = display[i];
+
+    if (displayEntry.endsWith("?")) {
+      displayEntry = displayEntry.replace("?", "");
+      if (values[displayEntry] === undefined)
+        continue; // Optional value, not set.
+    }
+
+    let value = values[displayEntry];
+
+    let addComma = opts.commas;
+
+    switch (displayEntry) {
       case "rs":
       case "rt":
       case "rd":
       case "fs":
       case "ft":
       case "fd":
-        result += " " + _formatReg(_getRegName(display[i]), opts);
+        if (!result.endsWith("("))
+          result += " ";
+        result += _formatReg(_getRegName(displayEntry), opts);
         break;
 
-      case "rd?":
-        if (rd !== opcodeObj.known["rd"])
-          result += " " + _formatReg(_getRegName(display[i]), opts);
-        break;
+      case "(":
+      case ")":
+        addComma = false;
+        if (result.endsWith(","))
+          result = result.slice(0, -1); // Lop off comma, since we are involved in a parenthesis open/close
 
-      case "sa":
-        result += " " + _formatNumber(sa, opts);
-        break;
-
-      case "imm":
-        if (isReg(display[i + 1]) || isFloatReg(display[i + 1])) {
-          result += " " + _formatNumber(imm, opts)
-            + "("
-            + _formatReg(_getRegName(display[i + 1]), opts)
-            + ")";
-          i++; // Handled next reg
-        }
-        else {
-          result += " " + _formatNumber(imm, opts);
-        }
-
+        result += displayEntry;
         break;
     }
 
-    if (opts.commas && (i !== display.length - 1)) {
+    const immDetails = getImmFormatDetails(displayEntry);
+    if (immDetails) {
+      if (!result.endsWith("("))
+        result += " ";
+
+      result += _formatNumber(value, opts);
+    }
+
+    if (addComma && (i !== display.length - 1) && !result.endsWith(",")) {
       result += ",";
     }
   }
@@ -110,67 +109,59 @@ function _print(inst, opts) {
   return result.trim();
 }
 
-function _extractValues(inst, opcodeObj) {
-  let rs, rt, rd, fs, ft, fd, sa, fmt, imm;
-  const opcodeFormat = opcodeObj.format;
-  switch (opcodeFormat) {
-    case "R":
-      [rs, rt, rd, sa] = _extractRFormat(inst);
-      break;
+function _extractValues(inst, format) {
+  let values = {};
+  for (let i = format.length - 1; i >= 0; i--) {
+    let value, bitLength;
+    let piece = format[i];
+    if (Array.isArray(piece)) {
+      for (let j = piece.length - 1; j >= 0; j--) {
+        bitLength = getValueBitLength(piece[j]);
+        value = inst & makeBitMask(bitLength);
 
-    case "I":
-      [rs, rt, imm] = _extractIFormat(inst);
-      break;
+        if (isBinaryLiteral(piece[j])) {
+          if (piece[j] === padBitString(value.toString(2), bitLength)) {
+            piece = piece[j];
+            break;
+          }
+        }
+        else {
+          piece = piece[j];
+          break;
+        }
+      }
+    }
+    else {
+      bitLength = getValueBitLength(piece);
+      value = inst & makeBitMask(bitLength);
+    }
 
-    case "J":
-      [imm] = _extractJFormat(inst, opcodeObj.shift);
-      break;
+    if (isBinaryLiteral(piece)) {
+      inst >>>= bitLength;
+      continue;
+    }
 
-    case "FR":
-      [fmt, ft, fs, fd] = _extractFRFormat(inst);
-      break;
+    values[piece] = value;
 
-    default:
-      throw `Unrecognized opcode format ${opcodeFormat}`;
+    const immDetails = getImmFormatDetails(piece);
+    if (immDetails) {
+      if (immDetails.signed && immDetails.bits === 16) {
+        values[piece] = makeInt16(values[piece]);
+      }
+
+      if (immDetails.shift) {
+        values[piece] = values[piece] << immDetails.shift;
+      }
+    }
+
+    inst >>>= bitLength;
   }
 
-  return [rs, rt, rd, fs, ft, fd, sa, fmt, imm];
-}
-
-function _extractRFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // rs
-    (inst >>> 16) & 0x1F, // rt
-    (inst >>> 11) & 0x1F, // rd
-    (inst >>> 6) & 0x1F, // sa
-  ];
-}
-
-function _extractIFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // rs
-    (inst >>> 16) & 0x1F, // rt
-    makeInt16(inst & 0xFFFF) // imm
-  ];
-}
-
-function _extractJFormat(inst, shift) {
-  return [
-    (inst & 0x03FFFFFF) << (shift ? 2 : 0)
-  ];
-}
-
-function _extractFRFormat(inst) {
-  return [
-    (inst >>> 21) & 0x1F, // fmt
-    (inst >>> 16) & 0x1F, // ft
-    (inst >>> 11) & 0x1F, // fs
-    (inst >>> 6) & 0x1F, // fd
-  ];
+  return values;
 }
 
 function _formatNumber(num, opts) {
-  if (!num)
+  if (num === 0)
     return num.toString(opts.numBase);
 
   let value = "";
@@ -196,11 +187,26 @@ function _formatReg(regStr, opts) {
   return value;
 }
 
-function _formatOpcode(opcodeName, fmt, opts) {
+function _formatOpcode(opcodeName, values, opts) {
   const pieces = opcodeName.split(".");
-  let opcode = pieces[0];
-  if (pieces.indexOf("fmt") !== -1)
-    opcode += "." + getFmtName(fmt);
+  for (let i = 0; i < pieces.length; i++) {
+    if (pieces[i] === "fmt") {
+      if (values.hasOwnProperty("fmt3"))
+        pieces[i] = getFmt3Name(values["fmt3"]);
+      else if (values.hasOwnProperty("fmt"))
+        pieces[i] = getFmtName(values["fmt"]);
+      else
+        throw new Error("Format value not available");
+    }
+    else if (pieces[i] === "cond") {
+      if (values.hasOwnProperty("cond"))
+        pieces[i] = getCondName(values["cond"]);
+      else
+        throw new Error("Condition value not available");
+    }
+  }
+  let opcode = pieces.join(".");
+
   return _applyCasing(opcode, opts.casing);
 }
 
@@ -213,13 +219,4 @@ function _applyCasing(value, casing) {
     default:
       return value.toUpperCase();
   }
-}
-
-function _printSpecialInst(inst, opts) {
-  if (inst === 0)
-    return _formatOpcode("NOP", undefined, opts);
-  if (inst === 0x0000000D)
-    return _formatOpcode("BREAK", undefined, opts);
-  if (inst === 0x0000000C)
-    return _formatOpcode("SYSCALL", undefined, opts);
 }
