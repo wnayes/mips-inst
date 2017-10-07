@@ -594,7 +594,7 @@ const opcodeDetails = {
   },
   mtc1: {
     format: ["010001", "00100", rt, fs, "00000000000"],
-    display: [ft, fs],
+    display: [rt, fs],
   },
   mthi: {
     format: ["000000", rs, "000000000000000", "010001"],

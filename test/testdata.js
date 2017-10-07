@@ -42,6 +42,7 @@ exports.testCases = [
   ["ADD.D F26 F26 F0", 0x4620D680],
   ["BC1F 0x200", 0x45000200],
   ["BC1F 0x6 0x200", 0x45180200],
+  ["MTC1 AT F22", 0x4481B000],
   ["MOV.S F0 F0", 0x46000006],
   ["MUL.D F0 F0 F4", 0x46240002],
   ["CEIL.L.S F0 F0", 0x4600000A],

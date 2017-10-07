@@ -544,7 +544,7 @@ const opcodeDetails = {
     display: [rt, rs, uint16],
   },
   bc1f: {
-    format: ["010001", "01000", [cc, "000"], "00", int16], // TODO shifting
+    format: ["010001", "01000", [cc, "000"], "00", int16], // TODO shifting?
     display: ["cc?", int16], // offset
   },
   bc1fl: {
@@ -633,7 +633,7 @@ const opcodeDetails = {
     display: ["cc?", fs, ft],
   },
   "ceil.l.fmt": {
-    format: ["010001", fmt, "00000", fs, fd, "001010"], // TODO
+    format: ["010001", fmt, "00000", fs, fd, "001010"],
     fmts: ["S", "D"],
     display: [fd, fs],
   },
@@ -794,7 +794,7 @@ const opcodeDetails = {
     display: [fd, fs],
   },
   j: {
-    format: ["000010", uint26shift2], // TODO
+    format: ["000010", uint26shift2],
     display: [uint26shift2],
   },
   jal: {
@@ -958,7 +958,7 @@ const opcodeDetails = {
   },
   mtc1: {
     format: ["010001", "00100", rt, fs, "00000000000"],
-    display: [ft, fs],
+    display: [rt, fs],
   },
   mthi: {
     format: ["000000", rs, "000000000000000", "010001"],
