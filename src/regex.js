@@ -23,14 +23,18 @@ export function getOpcode(str) {
     let foundCond = false;
     for (let i = pieces.length - 1; i > 0; i--) {
       let piece = pieces[i];
-      if (!foundFmt && isFmtString(piece)) {
-        foundFmt = true;
-        piece = "fmt";
+      if (!foundFmt) {
+        if (piece === "fmt" || isFmtString(piece)) {
+          foundFmt = true;
+          piece = "fmt";
+        }
       }
 
-      if (!foundCond && isCondString(piece)) {
-        foundCond = true;
-        piece = "cond";
+      if (!foundCond) {
+        if (isCondString(piece)) {
+          foundCond = true;
+          piece = "cond";
+        }
       }
 
       result = "." + piece + result;

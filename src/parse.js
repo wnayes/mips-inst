@@ -8,6 +8,9 @@ export function parse(value) {
   if (Array.isArray(value)) {
     return value.map(_parse);
   }
+  if (typeof value === "object") {
+    return _parse(value);
+  }
   if (typeof value === "string") {
     const values = value.split(/\r?\n/).filter(v => !!(v.trim()));
     if (values.length === 1)
@@ -20,21 +23,40 @@ export function parse(value) {
 }
 
 function _parse(value) {
-  let opcode = formats.getOpcode(value);
-  if (!opcode)
-    throw `Could not parse opcode from ${value}`;
+  let opcode, opcodeObj, values;
+  if (typeof value === "string") {
+    opcode = formats.getOpcode(value);
+    if (!opcode)
+      throw new Error(`Could not parse opcode from ${value}`);
 
-  let opcodeObj = getOpcodeDetails(opcode);
-  if (!opcodeObj) {
-    throw `Opcode ${opcode} was not recognized`;
+    opcodeObj = getOpcodeDetails(opcode);
+
+    values = _parseValues(opcode, opcodeObj, value);
+  }
+  else if (typeof value === "object") {
+    opcode = formats.getOpcode(value.op);
+    if (!opcode)
+      throw new Error("Object input to parse did not contain 'op'");
+
+    opcodeObj = getOpcodeDetails(opcode);
+    values = value;
   }
 
+  if (!opcodeObj)
+    throw new Error(`Opcode ${opcode} was not recognized`);
+
+  return bitsFromFormat(opcodeObj.format, values);
+}
+
+function _parseValues(opcode, opcodeObj, value) {
   let regex = formats.makeRegexForOpcode(opcodeObj);
   let match = regex.exec(value);
   if (!match)
     throw `Could not parse instruction: ${value}`;
 
-  let values = {};
+  let values = {
+    op: opcode
+  };
 
   if (opcode.indexOf(".fmt") !== -1 || opcode.indexOf(".cond") !== -1) {
     determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);
@@ -97,7 +119,7 @@ function _parse(value) {
     throw `Unrecognized opcode display entry ${displayEntry}`;
   }
 
-  return bitsFromFormat(opcodeObj.format, values);
+  return values;
 }
 
 function bitsFromFormat(format, values) {

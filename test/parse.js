@@ -9,8 +9,25 @@ const testCases = require("./testdata.js").testCases;
 describe("parse", () => {
   describe("test cases", () => {
     testCases.forEach((arr) => {
-      it(arr[0], () => {
-        assert.equal(parse(arr[0]), arr[1]);
+      let [str, num] = arr;
+
+      const caseName = `parse(${str})`;
+      it(caseName, () => {
+        assert.equal(parse(str), num);
+      });
+    });
+  });
+
+  describe("value object test cases", () => {
+    testCases.forEach((arr) => {
+      let [, num, vals] = arr;
+
+      if (!vals || !vals.op)
+        return;
+
+      const caseName = `parse(${JSON.stringify(vals)})`;
+      it(caseName, () => {
+        assert.equal(parse(vals), num);
       });
     });
   });

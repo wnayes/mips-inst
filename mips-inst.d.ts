@@ -2,7 +2,7 @@
  * Parses one or more strings of assembly and outputs the equivalent values in
  * numeric form.
  */
-export function parse(input: string | string[]): number | number[];
+export function parse(input: string | string[] | object | object[]): number | number[];
 
 interface IPrintOptions {
     commas?: boolean;

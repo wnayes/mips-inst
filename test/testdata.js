@@ -2,7 +2,7 @@ exports.testCases = [
   ["ADDU A0 A2 R0", 0x00C02021],
   ["ADDU A0 S1 R0", 0x02202021],
   ["SUBU A0 S1 V0", 0x02222023],
-  ["JAL 0x1F120", 0x0C007C48, { op: "jal", uint26shift2: 0x1F120 }],
+  ["JAL 0x1F120", 0x0C007C48, { op: "jal", uint26shift2: 0x7C48 }],
   ["ADDIU SP SP 0x28", 0x27BD0028],
   ["ADDIU SP SP 0xFFE8", 0x27BDFFE8],
   ["LH A0 0(V0)", 0x84440000],

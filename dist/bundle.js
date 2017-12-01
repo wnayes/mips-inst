@@ -1279,6 +1279,9 @@ function parse(value) {
   if (Array.isArray(value)) {
     return value.map(_parse);
   }
+  if (typeof value === "object") {
+    return _parse(value);
+  }
   if (typeof value === "string") {
     const values = value.split(/\r?\n/).filter(v => !!(v.trim()));
     if (values.length === 1)
@@ -1291,21 +1294,40 @@ function parse(value) {
 }
 
 function _parse(value) {
-  let opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value);
-  if (!opcode)
-    throw `Could not parse opcode from ${value}`;
+  let opcode, opcodeObj, values;
+  if (typeof value === "string") {
+    opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value);
+    if (!opcode)
+      throw new Error(`Could not parse opcode from ${value}`);
 
-  let opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
-  if (!opcodeObj) {
-    throw `Opcode ${opcode} was not recognized`;
+    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
+
+    values = _parseValues(opcode, opcodeObj, value);
+  }
+  else if (typeof value === "object") {
+    opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value.op);
+    if (!opcode)
+      throw new Error("Object input to parse did not contain 'op'");
+
+    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
+    values = value;
   }
 
+  if (!opcodeObj)
+    throw new Error(`Opcode ${opcode} was not recognized`);
+
+  return bitsFromFormat(opcodeObj.format, values);
+}
+
+function _parseValues(opcode, opcodeObj, value) {
   let regex = __WEBPACK_IMPORTED_MODULE_3__regex__["b" /* makeRegexForOpcode */](opcodeObj);
   let match = regex.exec(value);
   if (!match)
     throw `Could not parse instruction: ${value}`;
 
-  let values = {};
+  let values = {
+    op: opcode
+  };
 
   if (opcode.indexOf(".fmt") !== -1 || opcode.indexOf(".cond") !== -1) {
     determineOpcodeValues(match[1], opcode, opcodeObj.fmts, opcodeObj.format, values);
@@ -1368,7 +1390,7 @@ function _parse(value) {
     throw `Unrecognized opcode display entry ${displayEntry}`;
   }
 
-  return bitsFromFormat(opcodeObj.format, values);
+  return values;
 }
 
 function bitsFromFormat(format, values) {
@@ -1483,14 +1505,18 @@ function getOpcode(str) {
     let foundCond = false;
     for (let i = pieces.length - 1; i > 0; i--) {
       let piece = pieces[i];
-      if (!foundFmt && __WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */](piece)) {
-        foundFmt = true;
-        piece = "fmt";
+      if (!foundFmt) {
+        if (piece === "fmt" || __WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */](piece)) {
+          foundFmt = true;
+          piece = "fmt";
+        }
       }
 
-      if (!foundCond && __WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */](piece)) {
-        foundCond = true;
-        piece = "cond";
+      if (!foundCond) {
+        if (__WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */](piece)) {
+          foundCond = true;
+          piece = "cond";
+        }
       }
 
       result = "." + piece + result;
@@ -1726,6 +1752,13 @@ function _printValues(values, opcodeObj, opts) {
       if (!result.endsWith("("))
         result += " ";
 
+      if (immDetails.signed && immDetails.bits === 16) {
+        value = __WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */](value);
+      }
+      if (immDetails.shift) {
+        value = value << immDetails.shift;
+      }
+
       result += _formatNumber(value, opts);
     }
 
@@ -1770,17 +1803,6 @@ function _extractValues(inst, format) {
     }
 
     values[piece] = value;
-
-    const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](piece);
-    if (immDetails) {
-      if (immDetails.signed && immDetails.bits === 16) {
-        values[piece] = __WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */](values[piece]);
-      }
-
-      if (immDetails.shift) {
-        values[piece] = values[piece] << immDetails.shift;
-      }
-    }
 
     inst >>>= bitLength;
   }

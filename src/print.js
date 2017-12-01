@@ -120,6 +120,13 @@ function _printValues(values, opcodeObj, opts) {
       if (!result.endsWith("("))
         result += " ";
 
+      if (immDetails.signed && immDetails.bits === 16) {
+        value = makeInt16(value);
+      }
+      if (immDetails.shift) {
+        value = value << immDetails.shift;
+      }
+
       result += _formatNumber(value, opts);
     }
 
@@ -164,17 +171,6 @@ function _extractValues(inst, format) {
     }
 
     values[piece] = value;
-
-    const immDetails = getImmFormatDetails(piece);
-    if (immDetails) {
-      if (immDetails.signed && immDetails.bits === 16) {
-        values[piece] = makeInt16(values[piece]);
-      }
-
-      if (immDetails.shift) {
-        values[piece] = values[piece] << immDetails.shift;
-      }
-    }
 
     inst >>>= bitLength;
   }
