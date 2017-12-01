@@ -1620,10 +1620,11 @@ function print(inst, opts) {
   if (Array.isArray(inst))
     return inst.map((i) => _print(i, opts));
 
-  if (typeof inst === "number")
+  const inputType = typeof inst;
+  if (inputType === "number" || inputType === "object")
     return _print(inst, opts);
 
-  throw new Error("Unexpected input to parse. Pass a number or array of numbers.");
+  throw new Error("Unexpected input to print.");
 }
 
 function _getFinalOpts(givenOpts) {
@@ -1636,18 +1637,36 @@ function _getFinalOpts(givenOpts) {
 }
 
 function _print(inst, opts) {
-  if (typeof inst !== "number")
-    throw new Error("Unexpected array entry. Pass all numbers.");
+  let opcodeObj, opName, values;
+  if (typeof inst === "number") {
+    opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
+    if (!opName)
+      throw new Error("Unrecognized instruction");
 
-  const opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
-  if (!opName)
-    throw new Error("Unrecognized instruction");
+    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
 
-  const opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
+    values = _extractValues(inst, opcodeObj.format);
+    values.op = opName;
+  }
+  else if (typeof inst === "object") {
+    if (!inst.op)
+      throw new Error("Instruction object did not contain op");
 
-  let values = _extractValues(inst, opcodeObj.format);
+    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](inst.op);
 
-  let result = _formatOpcode(opName, values, opts);
+    values = inst;
+  }
+  else
+    throw new Error(`Unexpected value ${inst}`);
+
+  if (!opcodeObj)
+    throw new Error("Invalid opcode");
+
+  return _printValues(values, opcodeObj, opts);
+}
+
+function _printValues(values, opcodeObj, opts) {
+  let result = _formatOpcode(values, opts);
 
   function _getRegName(displayEntry) {
     switch (displayEntry) {
@@ -1674,6 +1693,9 @@ function _print(inst, opts) {
     }
 
     let value = values[displayEntry];
+    if (value === undefined && displayEntry !== "(" && displayEntry !== ")") {
+      throw new Error(`Expected ${displayEntry} value, got undefined`);
+    }
 
     let addComma = opts.commas;
 
@@ -1793,8 +1815,8 @@ function _formatReg(regStr, opts) {
   return value;
 }
 
-function _formatOpcode(opcodeName, values, opts) {
-  const pieces = opcodeName.split(".");
+function _formatOpcode(values, opts) {
+  const pieces = values.op.split(".");
   for (let i = 0; i < pieces.length; i++) {
     if (pieces[i] === "fmt") {
       if (values.hasOwnProperty("fmt3"))

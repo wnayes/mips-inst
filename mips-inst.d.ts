@@ -14,4 +14,4 @@ interface IPrintOptions {
 /**
  * Prints MIPS assembly strings from one or more numeric values.
  */
-export function print(input: number | number[], opts?: IPrintOptions): string | string[];
+export function print(input: number | number[] | object | object[], opts?: IPrintOptions): string | string[];

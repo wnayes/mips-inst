@@ -9,13 +9,37 @@ const testCases = require("./testdata.js").testCases;
 describe("print", () => {
   describe("test cases", () => {
     testCases.forEach((arr) => {
-      let caseName = "print(0x" + padZero(arr[1].toString(16), 8);
-      if (arr[2])
-        caseName += `, ${JSON.stringify(arr[2])})`;
+      let [str, num, optsOrVals] = arr;
+
+      let opts;
+      if (optsOrVals) {
+        if (!optsOrVals.op)
+          opts = optsOrVals;
+      }
+
+      let caseName = "print(0x" + padZero(num.toString(16), 8);
+
+      if (opts)
+        caseName = `${caseName}, ${JSON.stringify(opts)})`;
       else
         caseName += ")";
       it(caseName, () => {
-        assert.equal(print(arr[1], arr[2]), arr[0]);
+        assert.equal(print(num, opts), str);
+      });
+    });
+  });
+
+  describe("values object test cases", () => {
+    testCases.forEach((arr) => {
+      let [str, , vals] = arr;
+
+      if (!vals || !vals.op) {
+        return;
+      }
+
+      let caseName = `print(${JSON.stringify(vals)})`;
+      it(caseName, () => {
+        assert.equal(print(vals), str);
       });
     });
   });
