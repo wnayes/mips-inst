@@ -8,7 +8,7 @@ const testCases = require("./testdata.js").testCases;
 
 describe("print", () => {
   describe("test cases", () => {
-    testCases.forEach((arr) => {
+    testCases.forEach(arr => {
       let [str, num, optsOrVals] = arr;
 
       let opts;
@@ -30,7 +30,7 @@ describe("print", () => {
   });
 
   describe("values object test cases", () => {
-    testCases.forEach((arr) => {
+    testCases.forEach(arr => {
       let [str, , vals] = arr;
 
       if (!vals || !vals.op) {
@@ -40,6 +40,21 @@ describe("print", () => {
       let caseName = `print(${JSON.stringify(vals)})`;
       it(caseName, () => {
         assert.equal(print(vals), str);
+      });
+    });
+  });
+
+  describe("opts.intermediate test cases", () => {
+    testCases.forEach(arr => {
+      let [, num, vals] = arr;
+
+      if (!vals || !vals.op) {
+        return;
+      }
+
+      let caseName = "print(0x" + padZero(num.toString(16), 8) + ", { intermediate: true })";
+      it(caseName, () => {
+        assert.deepEqual(print(num, { intermediate: true }), vals);
       });
     });
   });

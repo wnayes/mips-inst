@@ -1635,11 +1635,20 @@ function isFloatReg(entry) {
 
 
 
-// opts:
-//   commas: true to separate values by commas
-//   include$: true to prefix registers with dollar sign
-//   casing: "toUpperCase" (default), "toLowerCase"
-//   numBase: 16 (hex, default), 10 (decimal)
+/**
+ * Prints a string representation of a MIPS instruction.
+ *
+ * With the `intermediate` option, this can also be used as a convenient base
+ * for a disassembler. The object output with `intermediate` can be manipulated
+ * and then passed directly to `parse`.
+ * @param {Number|Object} inst MIPS instruction, or intermediate object format.
+ * @param {Object} opts Behavior options
+ * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
+ * @param {Boolean} opts.commas True to separate values by commas
+ * @param {Boolean} opts.include$ True to prefix registers with dollar sign
+ * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a string
+ * @param {Number} opts.numBase Number format. 16 (hex, default), 10 (decimal)
+ */
 function print(inst, opts) {
   opts = _getFinalOpts(opts);
 
@@ -1655,9 +1664,10 @@ function print(inst, opts) {
 
 function _getFinalOpts(givenOpts) {
   return Object.assign({
+    casing: "toUpperCase",
     commas: false,
     include$: false,
-    casing: "toUpperCase",
+    intermediate: false,
     numBase: 16
   }, givenOpts);
 }
@@ -1687,6 +1697,9 @@ function _print(inst, opts) {
 
   if (!opcodeObj)
     throw new Error("Invalid opcode");
+
+  if (opts.intermediate)
+    return values;
 
   return _printValues(values, opcodeObj, opts);
 }
