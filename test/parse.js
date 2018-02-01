@@ -32,6 +32,21 @@ describe("parse", () => {
     });
   });
 
+  describe("opts.intermediate test cases", () => {
+    testCases.forEach(arr => {
+      let [str, , vals] = arr;
+
+      if (!vals || !vals.op) {
+        return;
+      }
+
+      let caseName = `parse(${str}), { intermediate: true })`;
+      it(caseName, () => {
+        assert.deepEqual(parse(str, { intermediate: true }), vals);
+      });
+    });
+  });
+
   describe("edge cases", () => {
     it("removes extra precision on jumps", () => {
       assert.equal(parse("JAL 0x0001F121"), 0x0C007C48);
@@ -71,6 +86,18 @@ describe("parse", () => {
         0x8FBF0018,
         0x03E00008
       ]);
+    });
+  });
+
+  describe("BREAK", () => {
+    it("preserves error codes with { intermediate: true }", () => {
+      assert.equal(parse({ op: "break", uint20: 0x01C00 }), 0x0007000D);
+    });
+  });
+
+  describe("SYSCALL", () => {
+    it("preserves codes with { intermediate: true }", () => {
+      assert.equal(parse({ op: "syscall", uint20: 0x17333 }), 0x005CCCCC);
     });
   });
 

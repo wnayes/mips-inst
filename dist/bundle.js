@@ -276,6 +276,10 @@ function makeInt16(value) {
 }
 
 function getImmFormatDetails(formatVal) {
+  // Remove optional indicator
+  if (formatVal[formatVal.length - 1] === "?")
+    formatVal = formatVal.substring(0, formatVal.length - 1);
+
   if (formatVal.indexOf("int") === -1) {
     if (formatVal.substr(0, 2) === "cc") {
       return {
@@ -624,7 +628,7 @@ const opcodeDetails = {
     display: [rs, rt, uint16], // offset
   },
   break: {
-    format: ["000000", uint20, "001101"],
+    format: ["000000", [uint20, "00000000000000000000"], "001101"],
     display: [],
   },
   "c.cond.fmt": {
@@ -1171,7 +1175,7 @@ const opcodeDetails = {
     display: [],
   },
   syscall: {
-    format: ["000000", uint20, "001100"],
+    format: ["000000", [uint20, "00000000000000000000"], "001100"],
     display: [],
   },
   teq: {
@@ -1275,25 +1279,47 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 
-function parse(value) {
+/**
+ * Parses a string MIPS instruction, returning numeric machine code.
+ *
+ * With the `intermediate` option, this can also be used as a convenient base
+ * for an assembler. The object output with `intermediate` can be manipulated
+ * prior to calling `parse` with it again.
+ * @param {String|Array|Object} value MIPS instruction, or intermediate object format.
+ * @param {Object} opts Behavior options
+ * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a number
+ * @returns {Number|Array|Object} Returns a numeric representation of the given
+ * MIPS instruction string.
+ * If multiple values are given (array) then multiple values are returned.
+ * When the `intermediate` option is passed, the return type is an object.
+ */
+function parse(value, opts) {
+  opts = _getFinalOpts(opts);
+
   if (Array.isArray(value)) {
-    return value.map(_parse);
+    return value.map(s => _parse(s, opts));
   }
   if (typeof value === "object") {
-    return _parse(value);
+    return _parse(value, opts);
   }
   if (typeof value === "string") {
     const values = value.split(/\r?\n/).filter(v => !!(v.trim()));
     if (values.length === 1)
-      return _parse(values[0]);
+      return _parse(values[0], opts);
     else
-      return values.map(_parse);
+      return values.map(s => _parse(s, opts));
   }
 
   throw new Error("Unexpected input to parse. Pass a string or array of strings.");
 }
 
-function _parse(value) {
+function _getFinalOpts(givenOpts) {
+  return Object.assign({
+    intermediate: false,
+  }, givenOpts);
+}
+
+function _parse(value, opts) {
   let opcode, opcodeObj, values;
   if (typeof value === "string") {
     opcode = __WEBPACK_IMPORTED_MODULE_3__regex__["a" /* getOpcode */](value);
@@ -1315,6 +1341,9 @@ function _parse(value) {
 
   if (!opcodeObj)
     throw new Error(`Opcode ${opcode} was not recognized`);
+
+  if (opts.intermediate)
+    return values;
 
   return bitsFromFormat(opcodeObj.format, values);
 }
@@ -1640,20 +1669,24 @@ function isFloatReg(entry) {
  *
  * With the `intermediate` option, this can also be used as a convenient base
  * for a disassembler. The object output with `intermediate` can be manipulated
- * and then passed directly to `parse`.
- * @param {Number|Object} inst MIPS instruction, or intermediate object format.
+ * prior to calling `print` with it again.
+ * @param {Number|Array|Object} inst MIPS instruction, or intermediate object format.
  * @param {Object} opts Behavior options
  * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
  * @param {Boolean} opts.commas True to separate values by commas
  * @param {Boolean} opts.include$ True to prefix registers with dollar sign
  * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a string
  * @param {Number} opts.numBase Number format. 16 (hex, default), 10 (decimal)
+ * @returns {String|Array|Object} Returns a string representation of the given
+ * MIPS instruction code(s).
+ * If multiple values are given (array) then multiple values are returned.
+ * When the `intermediate` option is passed, the return type is an object.
  */
 function print(inst, opts) {
   opts = _getFinalOpts(opts);
 
   if (Array.isArray(inst))
-    return inst.map((i) => _print(i, opts));
+    return inst.map(i => _print(i, opts));
 
   const inputType = typeof inst;
   if (inputType === "number" || inputType === "object")

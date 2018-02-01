@@ -41,6 +41,10 @@ export function makeInt16(value) {
 }
 
 export function getImmFormatDetails(formatVal) {
+  // Remove optional indicator
+  if (formatVal[formatVal.length - 1] === "?")
+    formatVal = formatVal.substring(0, formatVal.length - 1);
+
   if (formatVal.indexOf("int") === -1) {
     if (formatVal.substr(0, 2) === "cc") {
       return {

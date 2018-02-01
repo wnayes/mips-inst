@@ -29,8 +29,8 @@ exports.testCases = [
   ["DSLLV R0 R0 R0", 0x00000014],
   ["DDIV R0 R0", 0x0000001E],
   ["SYNC", 0x0000000F, { op: "sync" }],
-  ["BREAK", 0x0000000D, { op: "break", uint20: 0 }],
-  ["SYSCALL", 0x0000000C, { op: "syscall", uint20: 0 }],
+  ["BREAK", 0x0000000D, { op: "break" }],
+  ["SYSCALL", 0x0000000C, { op: "syscall" }],
   ["NOP", 0x00000000, { op: "nop" }],
 
   // FPU-related

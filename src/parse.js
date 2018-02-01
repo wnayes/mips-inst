@@ -4,25 +4,47 @@ import { getRegBits, getFmtBits, getFmt3Bits, getCondBits } from "./regs";
 import * as formats from "./regex";
 import { isBinaryLiteral, makeBitMaskFromString, makeBitMask } from "./bitstrings";
 
-export function parse(value) {
+/**
+ * Parses a string MIPS instruction, returning numeric machine code.
+ *
+ * With the `intermediate` option, this can also be used as a convenient base
+ * for an assembler. The object output with `intermediate` can be manipulated
+ * prior to calling `parse` with it again.
+ * @param {String|Array|Object} value MIPS instruction, or intermediate object format.
+ * @param {Object} opts Behavior options
+ * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a number
+ * @returns {Number|Array|Object} Returns a numeric representation of the given
+ * MIPS instruction string.
+ * If multiple values are given (array) then multiple values are returned.
+ * When the `intermediate` option is passed, the return type is an object.
+ */
+export function parse(value, opts) {
+  opts = _getFinalOpts(opts);
+
   if (Array.isArray(value)) {
-    return value.map(_parse);
+    return value.map(s => _parse(s, opts));
   }
   if (typeof value === "object") {
-    return _parse(value);
+    return _parse(value, opts);
   }
   if (typeof value === "string") {
     const values = value.split(/\r?\n/).filter(v => !!(v.trim()));
     if (values.length === 1)
-      return _parse(values[0]);
+      return _parse(values[0], opts);
     else
-      return values.map(_parse);
+      return values.map(s => _parse(s, opts));
   }
 
   throw new Error("Unexpected input to parse. Pass a string or array of strings.");
 }
 
-function _parse(value) {
+function _getFinalOpts(givenOpts) {
+  return Object.assign({
+    intermediate: false,
+  }, givenOpts);
+}
+
+function _parse(value, opts) {
   let opcode, opcodeObj, values;
   if (typeof value === "string") {
     opcode = formats.getOpcode(value);
@@ -44,6 +66,9 @@ function _parse(value) {
 
   if (!opcodeObj)
     throw new Error(`Opcode ${opcode} was not recognized`);
+
+  if (opts.intermediate)
+    return values;
 
   return bitsFromFormat(opcodeObj.format, values);
 }

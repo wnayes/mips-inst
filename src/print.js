@@ -8,20 +8,24 @@ import { isBinaryLiteral, makeBitMask, padBitString } from "./bitstrings";
  *
  * With the `intermediate` option, this can also be used as a convenient base
  * for a disassembler. The object output with `intermediate` can be manipulated
- * and then passed directly to `parse`.
- * @param {Number|Object} inst MIPS instruction, or intermediate object format.
+ * prior to calling `print` with it again.
+ * @param {Number|Array|Object} inst MIPS instruction, or intermediate object format.
  * @param {Object} opts Behavior options
  * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
  * @param {Boolean} opts.commas True to separate values by commas
  * @param {Boolean} opts.include$ True to prefix registers with dollar sign
  * @param {Boolean} opts.intermediate: Output an object intermediate format instead of a string
  * @param {Number} opts.numBase Number format. 16 (hex, default), 10 (decimal)
+ * @returns {String|Array|Object} Returns a string representation of the given
+ * MIPS instruction code(s).
+ * If multiple values are given (array) then multiple values are returned.
+ * When the `intermediate` option is passed, the return type is an object.
  */
 export function print(inst, opts) {
   opts = _getFinalOpts(opts);
 
   if (Array.isArray(inst))
-    return inst.map((i) => _print(i, opts));
+    return inst.map(i => _print(i, opts));
 
   const inputType = typeof inst;
   if (inputType === "number" || inputType === "object")

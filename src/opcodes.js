@@ -260,7 +260,7 @@ const opcodeDetails = {
     display: [rs, rt, uint16], // offset
   },
   break: {
-    format: ["000000", uint20, "001101"],
+    format: ["000000", [uint20, "00000000000000000000"], "001101"],
     display: [],
   },
   "c.cond.fmt": {
@@ -807,7 +807,7 @@ const opcodeDetails = {
     display: [],
   },
   syscall: {
-    format: ["000000", uint20, "001100"],
+    format: ["000000", [uint20, "00000000000000000000"], "001100"],
     display: [],
   },
   teq: {
