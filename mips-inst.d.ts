@@ -2,6 +2,10 @@
  * Parses one or more strings of assembly and outputs the equivalent values in
  * numeric form.
  */
+export function parse(input: string): number;
+export function parse(input: string[]): number[];
+export function parse(input: object): number;
+export function parse(input: object[]): number[];
 export function parse(input: string | string[] | object | object[]): number | number[];
 
 interface IPrintOptions {
