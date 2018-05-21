@@ -1,4 +1,4 @@
-/*global describe, it */
+/*global describe, it, beforeEach */
 
 const assert = require("assert");
 
@@ -70,6 +70,50 @@ describe("print", () => {
         "LW FP 0x88(SP)",
         "LW S7 0x84(SP)",
       ]);
+    });
+
+    describe("buffers", () => {
+      let buffer, dataView;
+
+      beforeEach(() => {
+        buffer = new ArrayBuffer(12);
+        dataView = new DataView(buffer);
+        dataView.setUint32(0, 0x8FBF008C);
+        dataView.setUint32(4, 0x8FBE0088);
+        dataView.setUint32(8, 0x8FB70084);
+      });
+
+      it("ArrayBuffer yields array", () => {
+        assert.deepEqual(print(buffer), [
+          "LW RA 0x8C(SP)",
+          "LW FP 0x88(SP)",
+          "LW S7 0x84(SP)",
+        ]);
+      });
+
+      it("DataView yields array", () => {
+        assert.deepEqual(print(dataView), [
+          "LW RA 0x8C(SP)",
+          "LW FP 0x88(SP)",
+          "LW S7 0x84(SP)",
+        ]);
+      });
+
+      it("DataView byteOffset is respected", () => {
+        dataView = new DataView(buffer, 4);
+        assert.deepEqual(print(dataView), [
+          "LW FP 0x88(SP)",
+          "LW S7 0x84(SP)",
+        ]);
+      });
+
+      it("DataView byteLength is respected", () => {
+        dataView = new DataView(buffer, 0, 8);
+        assert.deepEqual(print(dataView), [
+          "LW RA 0x8C(SP)",
+          "LW FP 0x88(SP)",
+        ]);
+      });
     });
   });
 

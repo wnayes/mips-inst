@@ -9,7 +9,7 @@ import { isBinaryLiteral, makeBitMask, padBitString } from "./bitstrings";
  * With the `intermediate` option, this can also be used as a convenient base
  * for a disassembler. The object output with `intermediate` can be manipulated
  * prior to calling `print` with it again.
- * @param {Number|Array|Object} inst MIPS instruction, or intermediate object format.
+ * @param {Number|Array|ArrayBuffer|DataView|Object} inst MIPS instruction, or intermediate object format.
  * @param {Object} opts Behavior options
  * @param {String} opts.casing "toUpperCase" (default), "toLowerCase"
  * @param {Boolean} opts.commas True to separate values by commas
@@ -26,6 +26,16 @@ export function print(inst, opts) {
 
   if (Array.isArray(inst))
     return inst.map(i => _print(i, opts));
+
+  const isArrayBuffer = inst instanceof ArrayBuffer;
+  if (isArrayBuffer || inst instanceof DataView) {
+    const dataView = isArrayBuffer ? new DataView(inst) : inst;
+    const result = [];
+    for (let i = 0; i < dataView.byteLength; i += 4) {
+      result.push(_print(dataView.getUint32(i), opts));
+    }
+    return result;
+  }
 
   const inputType = typeof inst;
   if (inputType === "number" || inputType === "object")
