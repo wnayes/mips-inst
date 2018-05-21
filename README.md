@@ -43,6 +43,8 @@ print(0x27BDFFE0, {
   numBase: 10
 });
 // "addiu $sp, $sp, -32"
+
+// print also accepts an ArrayBuffer or DataView.
 ```
 
 The bundled UMD module exports a `MIPSInst` global.
