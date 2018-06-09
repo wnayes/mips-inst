@@ -7,7 +7,7 @@
 		exports["MIPSInst"] = factory();
 	else
 		root["MIPSInst"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -395,7 +395,7 @@ function getOpcodeDetails(opcode) {
 }
 
 function getValueBitLength(str) {
-  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](str))
+  if (Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */])(str))
     return str.length;
 
   str = str.replace("?", "");
@@ -419,7 +419,7 @@ function getValueBitLength(str) {
       return 5;
   }
 
-  const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](str);
+  const immDetails = Object(__WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */])(str);
   if (immDetails) {
     return immDetails.bits;
   }
@@ -484,11 +484,11 @@ function formatMatches(number, format, fmts) {
 }
 
 function checkPiece(piece, number, bitOffset, fmts) {
-  if (!__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */](piece)) {
+  if (!Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["b" /* isBinaryLiteral */])(piece)) {
     if (piece === fmt) {
       for (let i = 0; i < fmts.length; i++) {
-        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["f" /* getFmtBits */](fmts[i]).toString(2), 5);
-        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
+        let fmtBitString = Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */])(Object(__WEBPACK_IMPORTED_MODULE_0__regs__["f" /* getFmtBits */])(fmts[i]).toString(2), 5);
+        if (Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */])(number, fmtBitString, bitOffset))
           return fmtBitString.length;
       }
       return -1;
@@ -496,8 +496,8 @@ function checkPiece(piece, number, bitOffset, fmts) {
 
     if (piece === fmt3) {
       for (let i = 0; i < fmts.length; i++) {
-        let fmtBitString = __WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */](__WEBPACK_IMPORTED_MODULE_0__regs__["d" /* getFmt3Bits */](fmts[i]).toString(2), 3);
-        if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, fmtBitString, bitOffset))
+        let fmtBitString = Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["e" /* padBitString */])(Object(__WEBPACK_IMPORTED_MODULE_0__regs__["d" /* getFmt3Bits */])(fmts[i]).toString(2), 3);
+        if (Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */])(number, fmtBitString, bitOffset))
           return fmtBitString.length;
       }
       return -1;
@@ -506,7 +506,7 @@ function checkPiece(piece, number, bitOffset, fmts) {
     return 0; // non-literal contributes nothing
   }
 
-  if (__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */](number, piece, bitOffset))
+  if (Object(__WEBPACK_IMPORTED_MODULE_1__bitstrings__["a" /* compareBits */])(number, piece, bitOffset))
     return piece.length;
 
   return -1;
@@ -1326,7 +1326,7 @@ function _parse(value, opts) {
     if (!opcode)
       throw new Error(`Could not parse opcode from ${value}`);
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
+    opcodeObj = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */])(opcode);
 
     values = _parseValues(opcode, opcodeObj, value);
   }
@@ -1335,7 +1335,7 @@ function _parse(value, opts) {
     if (!opcode)
       throw new Error("Object input to parse did not contain 'op'");
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opcode);
+    opcodeObj = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */])(opcode);
     values = value;
   }
 
@@ -1380,7 +1380,7 @@ function _parseValues(opcode, opcodeObj, value) {
       case "rs":
       case "rd":
       case "rt": {
-        const tryReg = __WEBPACK_IMPORTED_MODULE_2__regs__["h" /* getRegBits */](parsedVal);
+        const tryReg = Object(__WEBPACK_IMPORTED_MODULE_2__regs__["h" /* getRegBits */])(parsedVal);
         if (tryReg === undefined) {
           if (optional)
             continue;
@@ -1401,13 +1401,13 @@ function _parseValues(opcode, opcodeObj, value) {
         continue;
     }
 
-    const immDetails = __WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](displayEntry);
+    const immDetails = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */])(displayEntry);
     if (immDetails) {
       let value;
       const immPieces = [match[matchIndex], match[matchIndex + 1], match[matchIndex + 2]];
 
       if (!optional || immPieces[2]) {
-        value = __WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */](immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
+        value = Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["c" /* parseImmediate */])(immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
         values[displayEntry] = value;
       }
 
@@ -1428,7 +1428,7 @@ function bitsFromFormat(format, values) {
   for (let i = 0; i < format.length; i++) {
     let writeResult;
     let piece = format[i];
-    let bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](Array.isArray(piece) ? piece[0] : piece);
+    let bitLength = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */])(Array.isArray(piece) ? piece[0] : piece);
     output = (output << bitLength) >>> 0;
     if (Array.isArray(piece)) {
       for (let j = 0; j < piece.length; j++) {
@@ -1457,12 +1457,12 @@ function bitsFromFormat(format, values) {
 
 function writeBitsForPiece(piece, output, values) {
   let wrote = false;
-  if (__WEBPACK_IMPORTED_MODULE_4__bitstrings__["b" /* isBinaryLiteral */](piece)) {
-    output |= __WEBPACK_IMPORTED_MODULE_4__bitstrings__["d" /* makeBitMaskFromString */](piece);
+  if (Object(__WEBPACK_IMPORTED_MODULE_4__bitstrings__["b" /* isBinaryLiteral */])(piece)) {
+    output |= Object(__WEBPACK_IMPORTED_MODULE_4__bitstrings__["d" /* makeBitMaskFromString */])(piece);
     wrote = true;
   }
   else if (values[piece] !== undefined) {
-    let value = values[piece] & __WEBPACK_IMPORTED_MODULE_4__bitstrings__["c" /* makeBitMask */](__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece));
+    let value = values[piece] & Object(__WEBPACK_IMPORTED_MODULE_4__bitstrings__["c" /* makeBitMask */])(Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */])(piece));
     wrote = true;
     output |= value;
   }
@@ -1487,13 +1487,13 @@ function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, forma
         throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;
 
       if (genericPiece === "fmt")
-        values["fmt"] = __WEBPACK_IMPORTED_MODULE_2__regs__["f" /* getFmtBits */](givenPieces[i]);
+        values["fmt"] = Object(__WEBPACK_IMPORTED_MODULE_2__regs__["f" /* getFmtBits */])(givenPieces[i]);
       else if (genericPiece === "fmt3")
-        values["fmt3"] = __WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getFmt3Bits */](givenPieces[i]);
+        values["fmt3"] = Object(__WEBPACK_IMPORTED_MODULE_2__regs__["d" /* getFmt3Bits */])(givenPieces[i]);
     }
 
     if (genericPiece === "cond")
-      values["cond"] = __WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getCondBits */](givenPieces[i]);
+      values["cond"] = Object(__WEBPACK_IMPORTED_MODULE_2__regs__["a" /* getCondBits */])(givenPieces[i]);
   }
 }
 
@@ -1535,14 +1535,14 @@ function getOpcode(str) {
     for (let i = pieces.length - 1; i > 0; i--) {
       let piece = pieces[i];
       if (!foundFmt) {
-        if (piece === "fmt" || __WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */](piece)) {
+        if (piece === "fmt" || Object(__WEBPACK_IMPORTED_MODULE_0__regs__["k" /* isFmtString */])(piece)) {
           foundFmt = true;
           piece = "fmt";
         }
       }
 
       if (!foundCond) {
-        if (__WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */](piece)) {
+        if (Object(__WEBPACK_IMPORTED_MODULE_0__regs__["j" /* isCondString */])(piece)) {
           foundCond = true;
           piece = "cond";
         }
@@ -1612,7 +1612,7 @@ function getRegexForPart(part) {
   if (isFloatReg(part))
     return floatRegRegex;
 
-  if (__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */](part))
+  if (Object(__WEBPACK_IMPORTED_MODULE_1__immediates__["a" /* getImmFormatDetails */])(part))
     return immRegex;
 
   throw new Error(`Unrecognized display entry ${part}`);
@@ -1718,11 +1718,11 @@ function _getFinalOpts(givenOpts) {
 function _print(inst, opts) {
   let opcodeObj, opName, values;
   if (typeof inst === "number") {
-    opName = __WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */](inst);
+    opName = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["a" /* findMatch */])(inst);
     if (!opName)
       throw new Error("Unrecognized instruction");
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](opName);
+    opcodeObj = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */])(opName);
 
     values = _extractValues(inst, opcodeObj.format);
     values.op = opName;
@@ -1731,7 +1731,7 @@ function _print(inst, opts) {
     if (!inst.op)
       throw new Error("Instruction object did not contain op");
 
-    opcodeObj = __WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */](inst.op);
+    opcodeObj = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["b" /* getOpcodeDetails */])(inst.op);
 
     values = inst;
   }
@@ -1755,12 +1755,12 @@ function _printValues(values, opcodeObj, opts) {
       case "rs":
       case "rt":
       case "rd":
-        return __WEBPACK_IMPORTED_MODULE_1__regs__["i" /* getRegName */](values[displayEntry]);
+        return Object(__WEBPACK_IMPORTED_MODULE_1__regs__["i" /* getRegName */])(values[displayEntry]);
 
       case "fs":
       case "ft":
       case "fd":
-        return __WEBPACK_IMPORTED_MODULE_1__regs__["c" /* getFloatRegName */](values[displayEntry]);
+        return Object(__WEBPACK_IMPORTED_MODULE_1__regs__["c" /* getFloatRegName */])(values[displayEntry]);
     }
   }
 
@@ -1803,13 +1803,13 @@ function _printValues(values, opcodeObj, opts) {
         break;
     }
 
-    const immDetails = __WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */](displayEntry);
+    const immDetails = Object(__WEBPACK_IMPORTED_MODULE_2__immediates__["a" /* getImmFormatDetails */])(displayEntry);
     if (immDetails) {
       if (!result.endsWith("("))
         result += " ";
 
       if (immDetails.signed && immDetails.bits === 16) {
-        value = __WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */](value);
+        value = Object(__WEBPACK_IMPORTED_MODULE_2__immediates__["b" /* makeInt16 */])(value);
       }
       if (immDetails.shift) {
         value = value << immDetails.shift;
@@ -1833,11 +1833,11 @@ function _extractValues(inst, format) {
     let piece = format[i];
     if (Array.isArray(piece)) {
       for (let j = piece.length - 1; j >= 0; j--) {
-        bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece[j]);
-        value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
+        bitLength = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */])(piece[j]);
+        value = inst & Object(__WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */])(bitLength);
 
-        if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece[j])) {
-          if (piece[j] === __WEBPACK_IMPORTED_MODULE_3__bitstrings__["e" /* padBitString */](value.toString(2), bitLength)) {
+        if (Object(__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */])(piece[j])) {
+          if (piece[j] === Object(__WEBPACK_IMPORTED_MODULE_3__bitstrings__["e" /* padBitString */])(value.toString(2), bitLength)) {
             piece = piece[j];
             break;
           }
@@ -1849,11 +1849,11 @@ function _extractValues(inst, format) {
       }
     }
     else {
-      bitLength = __WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */](piece);
-      value = inst & __WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */](bitLength);
+      bitLength = Object(__WEBPACK_IMPORTED_MODULE_0__opcodes__["c" /* getValueBitLength */])(piece);
+      value = inst & Object(__WEBPACK_IMPORTED_MODULE_3__bitstrings__["c" /* makeBitMask */])(bitLength);
     }
 
-    if (__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */](piece)) {
+    if (Object(__WEBPACK_IMPORTED_MODULE_3__bitstrings__["b" /* isBinaryLiteral */])(piece)) {
       inst >>>= bitLength;
       continue;
     }
@@ -1898,15 +1898,15 @@ function _formatOpcode(values, opts) {
   for (let i = 0; i < pieces.length; i++) {
     if (pieces[i] === "fmt") {
       if (values.hasOwnProperty("fmt3"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["e" /* getFmt3Name */](values["fmt3"]);
+        pieces[i] = Object(__WEBPACK_IMPORTED_MODULE_1__regs__["e" /* getFmt3Name */])(values["fmt3"]);
       else if (values.hasOwnProperty("fmt"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["g" /* getFmtName */](values["fmt"]);
+        pieces[i] = Object(__WEBPACK_IMPORTED_MODULE_1__regs__["g" /* getFmtName */])(values["fmt"]);
       else
         throw new Error("Format value not available");
     }
     else if (pieces[i] === "cond") {
       if (values.hasOwnProperty("cond"))
-        pieces[i] = __WEBPACK_IMPORTED_MODULE_1__regs__["b" /* getCondName */](values["cond"]);
+        pieces[i] = Object(__WEBPACK_IMPORTED_MODULE_1__regs__["b" /* getCondName */])(values["cond"]);
       else
         throw new Error("Condition value not available");
     }
