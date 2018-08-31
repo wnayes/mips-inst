@@ -7,6 +7,7 @@ module.exports = {
     libraryTarget: "umd",
     library: "MIPSInst",
     filename: "mipsinst.js",
-    path: path.resolve(__dirname, "dist")
+    path: path.resolve(__dirname, "dist"),
+    globalObject: "typeof self !== 'undefined' ? self : this"
   }
 };
