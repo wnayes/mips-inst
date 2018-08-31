@@ -26,9 +26,9 @@
         <!-- Conditionally load the script from CDN or local file. -->
         <script type="text/javascript">
             (function() {
-                var libLocation = "https://unpkg.com/mips-inst/dist/bundle.js";
+                var libLocation = "https://unpkg.com/mips-inst/dist/mipsinst.js";
                 if (window.location.protocol === "file:") {
-                    libLocation = "../dist/bundle.js";
+                    libLocation = "../dist/mipsinst.js";
                 }
                 var libScript = document.createElement("script");
                 libScript.src = libLocation;

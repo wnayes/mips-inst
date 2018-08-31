@@ -2,7 +2,7 @@
 
 const assert = require("assert");
 
-const parse = require("../dist/bundle.js").parse;
+const parse = require("../dist/mipsinst.js").parse;
 
 const testCases = require("./testdata.js").testCases;
 
