@@ -2,7 +2,7 @@
   "name": "mips-inst",
   "version": "1.4.2",
   "description": "Convert between text and numeric representation of MIPS instructions.",
-  "main": "./dist/mipsinst.js",
+  "main": "dist/mipsinst.js",
   "types": "mips-inst.d.ts",
   "scripts": {
     "build": "webpack --config webpack.dev.config.js & webpack --config webpack.prod.config.js",
