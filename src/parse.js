@@ -52,6 +52,8 @@ function _parse(value, opts) {
       throw new Error(`Could not parse opcode from ${value}`);
 
     opcodeObj = getOpcodeDetails(opcode);
+    if (!opcodeObj)
+      throw new Error(`Opcode ${opcode} was not recognized`);
 
     values = _parseValues(opcode, opcodeObj, value);
   }
@@ -61,11 +63,11 @@ function _parse(value, opts) {
       throw new Error("Object input to parse did not contain 'op'");
 
     opcodeObj = getOpcodeDetails(opcode);
+    if (!opcodeObj)
+      throw new Error(`Opcode ${opcode} was not recognized`);
+
     values = value;
   }
-
-  if (!opcodeObj)
-    throw new Error(`Opcode ${opcode} was not recognized`);
 
   if (opts.intermediate)
     return values;
