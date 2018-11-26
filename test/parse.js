@@ -107,5 +107,12 @@ describe("parse", () => {
         parse("ADD.T F26 F26 F0");
       });
     });
+
+    it("ignores valid formats", () => {
+      assert.doesNotThrow(() => {
+        parse("ADD.s F26 F26 F0");
+        parse("ADD.S F26 F26 F0");
+      });
+    });
   });
 });
