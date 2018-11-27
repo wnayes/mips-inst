@@ -211,7 +211,7 @@ function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, forma
 
     if (genericPiece === "fmt" || genericPiece === "ftm3") {
       if (allowedFormats.indexOf(givenPieces[i].toUpperCase()) === -1)
-        throw `Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`;
+        throw new Error(`Format ${givenPieces[i]} is not allowed for ${genericPiece}. Allowed values are ${allowedFormats}`);
 
       if (genericPiece === "fmt")
         values["fmt"] = getFmtBits(givenPieces[i]);
