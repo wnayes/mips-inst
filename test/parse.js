@@ -114,5 +114,11 @@ describe("parse", () => {
         parse("ADD.S F26 F26 F0");
       });
     });
+
+    it("restricts the sa to be an immediate", () => {
+      assert.throws(() => {
+        parse("SLL S0 V0 A0");
+      });
+    });
   });
 });

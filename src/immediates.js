@@ -12,6 +12,10 @@ export function parseImmediate(immArr, maxBits, signed, shift) {
   else
     value = parseInt(num, 10);
 
+  if (isNaN(value)) {
+    return value; // Let the caller decide what to do with NaN.
+  }
+
   if (shift) {
     value >>>= shift;
   }

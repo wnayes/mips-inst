@@ -79,7 +79,7 @@ function _parseValues(opcode, opcodeObj, value) {
   let regex = formats.makeRegexForOpcode(opcodeObj);
   let match = regex.exec(value);
   if (!match)
-    throw `Could not parse instruction: ${value}`;
+    throw new Error(`Could not parse instruction: ${value}`);
 
   let values = {
     op: opcode
@@ -135,6 +135,9 @@ function _parseValues(opcode, opcodeObj, value) {
 
       if (!optional || immPieces[2]) {
         value = parseImmediate(immPieces, immDetails.bits, immDetails.signed, immDetails.shift);
+        if (isNaN(value)) {
+          throw new Error(`Could not parse immediate ${immPieces.join("")}`);
+        }
         values[displayEntry] = value;
       }
 
@@ -143,7 +146,7 @@ function _parseValues(opcode, opcodeObj, value) {
       continue;
     }
 
-    throw `Unrecognized opcode display entry ${displayEntry}`;
+    throw new Error(`Unrecognized opcode display entry ${displayEntry}`);
   }
 
   return values;
@@ -204,7 +207,7 @@ function determineOpcodeValues(givenOpcode, genericOpcode, allowedFormats, forma
   const givenPieces = givenOpcode.split(".");
   const genericPieces = genericOpcode.split(".");
   if (givenPieces.length !== genericPieces.length)
-    throw `Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`;
+    throw new Error(`Given opcode ${givenOpcode} does not have all pieces (${genericOpcode})`);
 
   for (let i = 0; i < genericPieces.length; i++) {
     const genericPiece = genericPieces[i];
