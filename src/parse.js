@@ -76,7 +76,7 @@ function _parse(value, opts) {
 }
 
 function _parseValues(opcode, opcodeObj, value) {
-  let regex = formats.makeRegexForOpcode(opcodeObj);
+  let regex = formats.makeRegexForOpcode(opcode, opcodeObj);
   let match = regex.exec(value);
   if (!match)
     throw new Error(`Could not parse instruction: ${value}`);
@@ -96,7 +96,9 @@ function _parseValues(opcode, opcodeObj, value) {
     let displayEntry = display[i];
 
     const optional = displayEntry.endsWith("?");
-    displayEntry = displayEntry.replace("?", "");
+    if (optional) {
+      displayEntry = displayEntry.replace("?", "");
+    }
 
     switch (displayEntry) {
       case "(":

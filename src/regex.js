@@ -8,6 +8,8 @@ const floatRegRegex = "\\$?[Ff]([0-9]+)";
 
 const opcodeRegex = new RegExp("^\\s*" + opRegex);
 
+const _regexCache = Object.create(null);
+
 // Gets the op string from a given entire instruction.
 // This is a general form (.fmt rather than .S, .D, etc.)
 export function getOpcode(str) {
@@ -45,18 +47,20 @@ export function getOpcode(str) {
   return null;
 }
 
-export function makeRegexForOpcode(opcodeObj) {
-  const display = opcodeObj.display;
+export function makeRegexForOpcode(opcode, opcodeObj) {
+  if (_regexCache[opcode]) {
+    return _regexCache[opcode];
+  }
 
   const parts = [opRegex];
-
+  const display = opcodeObj.display;
   for (let i = 0; i < display.length; i++) {
     const part = display[i];
     const optional = part.endsWith("?");
 
     let regexPart = "";
     if (optional)
-      regexPart += "(?:";
+      regexPart += "(?:[,\\s]+";
 
     if (display[i + 1] === "(") {
       if (optional)
@@ -73,7 +77,7 @@ export function makeRegexForOpcode(opcodeObj) {
     }
 
     if (optional)
-      regexPart += "[,\\s]+)?";
+      regexPart += ")?";
 
     parts.push(regexPart);
   }
@@ -81,18 +85,16 @@ export function makeRegexForOpcode(opcodeObj) {
   let regexStr =
     "^\\s*" +
     parts.reduce((str, next, index) => {
-      if (index === parts.length - 1)
+      if (index === 0 || partIsOptional(next))
         return str + next;
 
-      // If it is an optional group, we already included the whitespace trailing.
-      if (!next.startsWith("(?:"))
-        return str + next + "[,\\s]+";
-
-      return str + next;
+      return str + "[,\\s]+" + next;
     }, "") +
     "\\s*$";
 
-  return new RegExp(regexStr);
+  const regex = new RegExp(regexStr);
+  _regexCache[opcode] = regex;
+  return regex;
 }
 
 function getRegexForPart(part) {
@@ -109,6 +111,10 @@ function getRegexForPart(part) {
 
 function makeParenthesisRegex(regex1, regex2) {
   return regex1 + "\\s*" + "\\(?" + regex2 + "\\)?";
+}
+
+function partIsOptional(partStr) {
+  return partStr.startsWith("(?:");
 }
 
 export function isReg(entry) {

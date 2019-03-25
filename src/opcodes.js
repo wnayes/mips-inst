@@ -261,7 +261,7 @@ const opcodeDetails = {
   },
   break: {
     format: ["000000", [uint20, "00000000000000000000"], "001101"],
-    display: [],
+    display: ["uint20?"],
   },
   "c.cond.fmt": {
     format: ["010001", fmt, ft, fs, [cc, "000"], "00", "11", cond],

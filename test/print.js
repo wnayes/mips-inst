@@ -119,7 +119,7 @@ describe("print", () => {
 
   describe("BREAK", () => {
     it("handles error codes", () => {
-      assert.equal(print(0x0007000D), "BREAK");
+      assert.equal(print(0x0007000D), "BREAK 0x1C00");
     });
   });
 
