@@ -16,10 +16,10 @@
     "url": "https://github.com/wnayes/mips-inst.git"
   },
   "devDependencies": {
-    "eslint": "^5.14.0",
-    "eslint-plugin-react": "^7.12.4",
-    "mocha": "^5.0.0",
-    "webpack": "^4.29.4",
-    "webpack-cli": "^3.2.3"
+    "eslint": "^6.4.0",
+    "eslint-plugin-react": "^7.14.3",
+    "mocha": "^6.2.0",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.8"
   }
 }
