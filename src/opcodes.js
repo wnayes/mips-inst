@@ -26,7 +26,19 @@ export function getOpcodeDetails(opcode) {
   return opcodeDetails[opcode.toLowerCase()];
 }
 
+const _valueBitLengths = new Map();
+
 export function getValueBitLength(str) {
+  if (_valueBitLengths.has(str)) {
+    return _valueBitLengths.get(str);
+  }
+
+  const calculated = computeValueBitLength(str);
+  _valueBitLengths.set(str, calculated);
+  return calculated;
+}
+
+function computeValueBitLength(str) {
   if (isBinaryLiteral(str))
     return str.length;
 
