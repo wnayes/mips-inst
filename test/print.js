@@ -2,7 +2,7 @@
 
 const assert = require("assert");
 
-const print = require("../dist/mipsinst.js").print;
+const print = require("../dist/umd/mipsinst.umd.js").print;
 
 const testCases = require("./testdata.js").testCases;
 

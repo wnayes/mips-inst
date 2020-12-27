@@ -1,13 +1,13 @@
 const path = require("path");
 
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry: "./src/index.js",
   output: {
     libraryTarget: "umd",
     library: "MIPSInst",
-    filename: "mipsinst.js",
-    path: path.resolve(__dirname, "dist"),
+    filename: "mipsinst.umd.js",
+    path: path.resolve(__dirname, "dist", "umd"),
     globalObject: "typeof self !== 'undefined' ? self : this"
   }
 };

@@ -1,7 +1,9 @@
 mips-inst
 =========
 
-Convert between text and hex representation of MIPS instructions.
+[![npm version](https://badge.fury.io/js/mips-inst.svg)](https://www.npmjs.com/package/mips-inst)
+
+Convert between text and hex representation of MIPS instructions. Used as the basis for the [mips-assembler](https://github.com/wnayes/mips-assembler) package.
 
 Supports the MIPS IV instruction set.
 
@@ -47,7 +49,7 @@ print(0x27BDFFE0, {
 // print also accepts an ArrayBuffer or DataView.
 ```
 
-The bundled UMD module exports a `MIPSInst` global.
+The distributed `dist/umd/mipsinst.umd.js` exports a `MIPSInst` global.
 
 Development
 ===========

@@ -26,9 +26,9 @@
         <!-- Conditionally load the script from CDN or local file. -->
         <script type="text/javascript">
             (function() {
-                var libLocation = "https://unpkg.com/mips-inst/dist/mipsinst.js";
+                var libLocation = "https://unpkg.com/mips-inst/dist/umd/mipsinst.umd.js";
                 if (window.location.protocol === "file:") {
-                    libLocation = "../dist/mipsinst.js";
+                    libLocation = "../dist/umd/mipsinst.umd.js";
                 }
                 var libScript = document.createElement("script");
                 libScript.src = libLocation;

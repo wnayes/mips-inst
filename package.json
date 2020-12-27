@@ -2,10 +2,10 @@
   "name": "mips-inst",
   "version": "2.2.7",
   "description": "Convert between text and numeric representation of MIPS instructions.",
-  "main": "dist/mipsinst.js",
+  "main": "dist/js/index.js",
   "types": "./mips-inst.d.ts",
   "scripts": {
-    "build": "webpack --config webpack.dev.config.js & webpack --config webpack.prod.config.js",
+    "build": "cp -R src/* dist/js && webpack",
     "test": "mocha"
   },
   "keywords": [],
@@ -16,10 +16,10 @@
     "url": "https://github.com/wnayes/mips-inst.git"
   },
   "devDependencies": {
-    "eslint": "^7.12.0",
+    "eslint": "^7.16.0",
     "eslint-plugin-react": "^7.21.5",
-    "mocha": "^8.2.0",
-    "webpack": "^5.2.0",
-    "webpack-cli": "^4.1.0"
+    "mocha": "^8.2.1",
+    "webpack": "^5.11.0",
+    "webpack-cli": "^4.3.0"
   }
 }

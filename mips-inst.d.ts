@@ -1,5 +1,3 @@
-export as namespace MIPSInst;
-
 /**
  * Parses one or more strings of assembly and outputs the equivalent values in
  * numeric form.
