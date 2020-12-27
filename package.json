@@ -1,6 +1,6 @@
 {
   "name": "mips-inst",
-  "version": "2.2.7",
+  "version": "3.0.0",
   "description": "Convert between text and numeric representation of MIPS instructions.",
   "main": "dist/js/index.js",
   "types": "./mips-inst.d.ts",
